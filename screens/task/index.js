@@ -17,7 +17,7 @@ export function TaskScreen({ navigation }) {
   ]
 
     return(
-      <View style = {{paddingHorizontal:20, paddingVertical:50, flex:1}}>
+      <View style = {{paddingHorizontal:20, paddingVertical:20, flex:1}}>
     
         <SelectList 
               setSelected={(val) => setSelected(val)} 
