@@ -1,0 +1,50 @@
+{
+  "name": "react-native-dropdown-select-list",
+  "version": "2.0.4",
+  "description": "⭐ React Native Select List Equivalent to Html's Select with options\"",
+  "main": "index.ts",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danish1658/react-native-dropdown-select-list.git"
+  },
+  "keywords": [
+    "picker",
+    "select",
+    "dropdown",
+    "android",
+    "ios",
+    "selectlist",
+    "searchable",
+    "list",
+    "dropdown-picker",
+    "react",
+    "react native",
+    "react-native",
+    "reactnative",
+    "selectlist",
+    "expo",
+    "easy",
+    "menu",
+    "tag",
+    "chooser",
+    "multiple",
+    "multi"
+  ],
+  "devDependencies": {
+    "react": "17.0.2",
+    "react-native": "0.68.2",
+    "@types/react": "^18.0.25",
+    "@types/react-native": "^0.70.6",
+    "typescript": "^4.8.4"
+  },
+  "author": "Danish Amin Dar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/danish1658/react-native-dropdown-select-list/issues"
+  },
+  "homepage": "https://github.com/danish1658/react-native-dropdown-select-list#readme"
+}
