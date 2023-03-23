@@ -1,14 +1,22 @@
 import * as React from 'react';
 import { View, Pressable, Text, TextInput, Image, Keyboard, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AuthContext } from '../../contexts/AuthContext';
+import { UserAuth } from '../../contexts/AuthContext';
 
 export function LoginScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const {setIsLoggedIn} = React.useContext(AuthContext);
+  const { signIn } = UserAuth();
 
-  const loginHandler = () => {
-    setIsLoggedIn(true);
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [errors, setErrors] = React.useState("");
+
+  const loginHandler = async () => {
+    await signIn(email, password).then((success) => {
+        if (!success) {
+            setErrors("Invalid email or password.");
+        }
+    })
   }
 
     return (
@@ -27,12 +35,14 @@ export function LoginScreen({ navigation }) {
                     </View>
                     <View className="mb-4">
                         <Text className="text-white text-base mb-2">Email address</Text>
-                        <TextInput className="bg-white text-[16px] rounded p-2 w-64"></TextInput>
+                        <TextInput className="bg-white text-[16px] rounded p-2 w-64" autoCapitalize='none' autoCorrect={false} onChangeText={(text) => setEmail(text)}></TextInput>
                     </View>
                     <View className="mb-4">
                         <Text className="text-white text-base mb-2">Password</Text>
-                        <TextInput className="bg-white text-[16px] rounded p-2 w-64" secureTextEntry={true}></TextInput>
+                        <TextInput className="bg-white text-[16px] rounded p-2 w-64" autoCapitalize='none' autoCorrect={false} onChangeText={(text) => setPassword(text)} secureTextEntry={true}></TextInput>
                     </View>
+                    {errors.length === 0 ? <></> : 
+                    <Text className="text-red-800 text-xs my-1 w-64 text-center">{errors}</Text> }
                     <Pressable className="my-8"
                     onPress={loginHandler}
                     >
