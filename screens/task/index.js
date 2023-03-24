@@ -18,6 +18,8 @@ export function TaskScreen({ navigation }) {
     Keyboard.dismiss();
     setTaskItems([...taskItems, task])
     setTask(null);
+    setDesc(null);
+    setModalVisible(false);
   }
 
   const deleteTask = (index) => {
@@ -79,8 +81,8 @@ export function TaskScreen({ navigation }) {
         <TouchableOpacity onPress={toggleModalVisibility}>
             <AntDesign style={styles.plus} name="plussquare" size={30} color='#7B1113' />
         </TouchableOpacity>
-
-        <Modal animationType="slide" 
+        
+        {isModalVisible ? <Modal animationType="slide" 
                    transparent visible={isModalVisible} 
                    presentationStyle="overFullScreen" 
                    onDismiss={toggleModalVisibility}>
@@ -101,7 +103,8 @@ export function TaskScreen({ navigation }) {
                     </View>
                 </View>
             </View>
-        </Modal>
+        </Modal> : <></>}
+        
 
       </View>
 
