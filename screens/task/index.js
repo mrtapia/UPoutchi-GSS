@@ -1,11 +1,44 @@
 import * as React from 'react';
-import { StyleSheet, View, Pressable, Text, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Pressable, Text, Image, TouchableOpacity, Keyboard, ScrollView, Modal, TextInput, Button, Dimensions } from 'react-native';
+import Task from './components/taskformat';
 import { SelectList } from 'react-native-dropdown-select-list';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 
+const { width } = Dimensions.get("window");
 
 export function TaskScreen({ navigation }) {
   const [selected, setSelected] = React.useState("");
+  const [isModalVisible, setModalVisible] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState("");
+  const [task, setTask] = React.useState();
+  const [desc, setDesc] = React.useState();
+  const [taskItems, setTaskItems] = React.useState([]);
+
+  const handleAddTask = () => {
+    Keyboard.dismiss();
+    setTaskItems([...taskItems, task])
+    setTask(null);
+  }
+
+  const deleteTask = (index) => {
+    let itemsCopy = [...taskItems];
+    itemsCopy.splice(index, 1);
+    setTaskItems(itemsCopy)
+  }
+
+  const editTask = (index) => {
+    let itemsCopy = [...taskItems];
+    setTaskItems(itemsCopy)
+  }
+
+  const checkTask = (index) => {
+    let itemsCopy = [...taskItems];
+    setTaskItems(itemsCopy)
+  }
+
+  const toggleModalVisibility = () => {
+    setModalVisible(!isModalVisible);
+    };
 
   const data = [
       {key:'1', value:'Today'},
@@ -17,7 +50,7 @@ export function TaskScreen({ navigation }) {
   ]
 
     return(
-      <View style = {{paddingHorizontal:20, paddingVertical:20, flex:1}}>
+      <View style = {{paddingHorizontal:10, paddingVertical:15, flex:1}}>
     
         <SelectList 
               setSelected={(val) => setSelected(val)} 
@@ -26,81 +59,49 @@ export function TaskScreen({ navigation }) {
               data={data} 
               save="value"
           />
-    
-        <View style={styles.container}>
-            <View style={styles.taskContainer}>
-                <Text style={styles.task}>Task 1</Text>
-                <TouchableOpacity onPress={() => props.checkTask()}>
-                    <AntDesign style={styles.check} name="eyeo" size={22} color='#fff' />
+
+        <View style = {{paddingBottom:35, flex:1}}>
+        <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps='handled'>
+
+        {
+            taskItems.map((item, index) => {
+              return (
+                <TouchableOpacity key={index}  onPress={() => deleteTask(index)}>
+                  <Task text={item} /> 
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => props.editTask()}>
-                    <AntDesign style={styles.edit} name="edit" size={22} color='#fff' />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => props.deleteTask()}>
-                    <MaterialIcons style={styles.delete} name="delete" size={22} color='#fff' />
-                </TouchableOpacity>
-            </View>
+              )
+            })
+          }
+
+        </ScrollView>
         </View>
 
-        <View style={styles.container}>
-            <View style={styles.taskContainer}>
-                <Text style={styles.task}>Task 2</Text>
-                <TouchableOpacity onPress={() => props.checkTask()}>
-                    <AntDesign style={styles.check} name="eyeo" size={22} color='#fff' />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => props.editTask()}>
-                    <AntDesign style={styles.edit} name="edit" size={22} color='#fff' />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => props.deleteTask()}>
-                    <MaterialIcons style={styles.delete} name="delete" size={22} color='#fff' />
-                </TouchableOpacity>
-            </View>
-        </View>
+        <TouchableOpacity onPress={toggleModalVisibility}>
+            <AntDesign style={styles.plus} name="plussquare" size={30} color='#7B1113' />
+        </TouchableOpacity>
 
-        <View style={styles.container}>
-            <View style={styles.taskContainer}>
-                <Text style={styles.task}>Task 3</Text>
-                <TouchableOpacity onPress={() => props.checkTask()}>
-                    <AntDesign style={styles.check} name="eyeo" size={22} color='#fff' />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => props.editTask()}>
-                    <AntDesign style={styles.edit} name="edit" size={22} color='#fff' />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => props.deleteTask()}>
-                    <MaterialIcons style={styles.delete} name="delete" size={22} color='#fff' />
-                </TouchableOpacity>
+        <Modal animationType="slide" 
+                   transparent visible={isModalVisible} 
+                   presentationStyle="overFullScreen" 
+                   onDismiss={toggleModalVisibility}>
+            <View style={styles.viewWrapper}>
+                <View style={styles.modalView}>
+                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:10}}>Task Name</Text>
+                    <TextInput placeholder="Enter something..." 
+                                value={task} style={styles.taskName} 
+                                onChangeText={text => setTask(text)} />
+                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:100}}>Task Description</Text>
+                    <TextInput placeholder="Enter something..." 
+                                value={desc} textAlignVertical='top' style={styles.taskDesc} 
+                                onChangeText={desc => setDesc(desc)} />
+                    <View style={{flexDirection: 'row', position: 'absolute', bottom: 15}}>
+                    <Button title="Close" onPress={toggleModalVisibility} color='#7B1113'/>
+                    <View style={{width: 150}} />
+                    <Button title="Add Task" onPress={() => handleAddTask()} color='#7B1113' />
+                    </View>
+                </View>
             </View>
-        </View>
-
-        <View style={styles.container}>
-            <View style={styles.taskContainer}>
-                <Text style={styles.task}>Task 4</Text>
-                <TouchableOpacity onPress={() => props.checkTask()}>
-                    <AntDesign style={styles.check} name="eyeo" size={22} color='#fff' />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => props.editTask()}>
-                    <AntDesign style={styles.edit} name="edit" size={22} color='#fff' />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => props.deleteTask()}>
-                    <MaterialIcons style={styles.delete} name="delete" size={22} color='#fff' />
-                </TouchableOpacity>
-            </View>
-        </View>
-
-        <View style={styles.container}>
-            <View style={styles.taskContainer}>
-                <Text style={styles.task}>Task 5</Text>
-                <TouchableOpacity onPress={() => props.checkTask()}>
-                    <AntDesign style={styles.check} name="eyeo" size={22} color='#fff' />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => props.editTask()}>
-                    <AntDesign style={styles.edit} name="edit" size={22} color='#fff' />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => props.deleteTask()}>
-                    <MaterialIcons style={styles.delete} name="delete" size={22} color='#fff' />
-                </TouchableOpacity>
-            </View>
-        </View>
+        </Modal>
 
       </View>
 
@@ -141,5 +142,53 @@ export function TaskScreen({ navigation }) {
     },
     delete: {
         marginLeft: 0,
+    },
+    plus: {
+        position: "absolute", 
+        bottom: -5,
+        right: 0
+    },
+    viewWrapper: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.2)",
+    },
+    modalView: {
+        alignItems: "center",
+        justifyContent: "center",
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        elevation: 5,
+        transform: [{ translateX: -(width * 0.4) }, 
+                    { translateY: -250 }],
+        height: 500,
+        width: width * 0.8,
+        backgroundColor: "#fff",
+        borderRadius: 7,
+    },
+    taskName: {
+        width: "85%",
+        position: "absolute",
+        borderRadius: 5,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderColor: "rgba(0, 0, 0, 0.2)",
+        borderWidth: 1,
+        marginBottom: 8,
+        top:40,
+    },
+    taskDesc: {
+        width: "85%",
+        height: "60%",
+        position: "absolute",
+        borderRadius: 5,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderColor: "rgba(0, 0, 0, 0.2)",
+        borderWidth: 1,
+        marginBottom: 8,
+        top:130,
     },
 });
