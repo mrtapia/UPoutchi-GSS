@@ -22,7 +22,7 @@ export function ScheduleScreen({ navigation }) {
             defaultOption={{key:'3', value:'Monthly'}}
             search={false}
         />
-        {!!selected && selected === 'Monthly' && (
+        {!!selected && (selected === 'Monthly' || selected === '3') && (
           <Calendar
           // Month format in calendar title. Formatting values: http://arshaw.com/xdate/#Formatting
           monthFormat={'yyyy MMMM'}
