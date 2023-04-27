@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {Pressable} from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -11,12 +12,17 @@ import { ScheduleScreen } from './screens/schedule';
 import { TaskScreen } from './screens/task';
 import { DashboardScreen } from './screens/dashboard';
 import { AuthContextProvider, UserAuth, TempAuthContext } from './contexts/AuthContext';
+import { Entypo } from '@expo/vector-icons';
+import { Octicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const ButtonScreen = () => null;
 
 function Navigators() {
-  const { user } = UserAuth();
+  const { user, logOut } = UserAuth();
 
   const [firstname, setFirstname] = React.useState("");
   const [lastname, setLastname] = React.useState("");
@@ -24,15 +30,59 @@ function Navigators() {
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
 
+  const handleLogOut = () => {
+    logOut();
+  }
+
   return (
     <>
     {user !== null ? (
       <NavigationContainer>
-        <Tab.Navigator>
-          <Tab.Screen name="Home" component={HomeScreen} />
-          <Tab.Screen name="Schedule" component={ScheduleScreen} />
-          <Tab.Screen name="Task" component={TaskScreen} />
-          <Tab.Screen name="Dashboard" component={DashboardScreen} />
+        <Tab.Navigator screenOptions={{
+          tabBarStyle: { paddingBottom:0, borderColor:"#161819" },
+          tabBarLabelStyle: {paddingBottom:30 },
+          tabBarActiveBackgroundColor: "#161819",
+          tabBarInactiveBackgroundColor: "#161819",
+          tabBarActiveTintColor: "#3C78AF",
+          tabBarInactiveTintColor: "#818181",
+          headerStyle: {backgroundColor: "#161819" },
+          headerTintColor: "#3C78AF"
+
+        }}>
+          <Tab.Screen name="Home" component={HomeScreen} 
+          options={{
+            tabBarLabel: 'Home',
+            tabBarIcon: ({ color }) => (
+              <Entypo name="home" size={24} color={color} />
+            ),
+          }}/>
+          <Tab.Screen name="Schedule" component={ScheduleScreen} 
+          options={{
+            tabBarLabel: 'Schedule',
+            tabBarIcon: ({ color }) => (
+              <Entypo name="calendar" size={24} color={color} />
+            ),
+          }}/>
+          <Tab.Screen name="Task" component={TaskScreen} 
+          options={{
+            tabBarLabel: 'Tasks',
+            tabBarIcon: ({ color }) => (
+              <Octicons name="checklist" size={24} color={color} />
+            ),
+          }}/>
+          <Tab.Screen name="Dashboard" component={DashboardScreen} 
+          options={{
+            tabBarLabel: 'Dashboard',
+            tabBarIcon: ({ color }) => (
+              <MaterialIcons name="dashboard" size={24} color={color} />
+            ),
+          }}/>
+          <Tab.Screen name="LogOut"  component={ButtonScreen}
+              options={({navigation})=> ({
+                tabBarIcon: ({color}) => (<FontAwesome name="sign-out" size={24} color={color} />),
+                tabBarLabel: "Log Out",
+                tabBarButton:props => <Pressable {...props} onPress={()=>handleLogOut()}/>
+          })}/>
         </Tab.Navigator>
       </NavigationContainer>
     ):(

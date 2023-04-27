@@ -8,7 +8,11 @@ import {
 import {
     doc,
     getDoc,
-    setDoc
+    setDoc,
+    query,
+    collection,
+    where,
+    getDocs
 } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 
@@ -18,6 +22,13 @@ export const TempAuthContext = createContext(false);
 export const AuthContextProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [userInfo, setUserInfo] =useState({});
+
+    const isEmailAvailable = async (email) => {
+      const q = query(collection(db, "users"), where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) return true;
+      else return false;
+    }
 
     const signIn = async (email, password) => {
         await signInWithEmailAndPassword(auth, email, password)
@@ -47,6 +58,7 @@ export const AuthContextProvider = ({ children }) => {
         await setDoc(doc(db, "users", user.uid), {
             firstname: firstname,
             lastname: lastname,
+            email: email,
             upoutchi: upoutchi
           });
         return true;
@@ -54,7 +66,7 @@ export const AuthContextProvider = ({ children }) => {
     .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
-        console.log(errorCode, errorMessage);
+        console.log(errorCode, "Message:", errorMessage);
         return false;
     });
   }
@@ -76,7 +88,7 @@ export const AuthContextProvider = ({ children }) => {
   
   return (
     <AuthContext.Provider
-      value={{ signIn, signUp, logOut, user, userInfo }}
+      value={{ signIn, signUp, logOut, isEmailAvailable, user, userInfo }}
     >
       {children}
     </AuthContext.Provider>
