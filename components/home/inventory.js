@@ -49,6 +49,7 @@ export function Inventory({
     knowledge, setKnowledge 
 }) {
     const [selected, setSelected] = useState({});
+    const [refreshFlatlist, setRefreshFlatList] = useState(false);
     const isUsingItem = useRef(false);
     const itemUsed = useRef({});
     const opacity = useRef(new Animated.Value(0));
@@ -128,7 +129,11 @@ export function Inventory({
             new_val = prev + itemUsed.current.item.points > 100 ? 100 : prev + itemUsed.current.item.points;
             setHygiene(new_val);
         }
-        if (inventory[itemUsed.current.id] == 0) setSelected({});
+        if (inventory[itemUsed.current.id] == 0) {
+            setSelected({});
+            delete inventory[itemUsed.current.id];
+            setRefreshFlatList(!refreshFlatlist);
+        }
         itemUsed.current = {};
     }
 
@@ -268,13 +273,14 @@ export function Inventory({
                                 </Pressable>
                             </View>
                         </View>
-                        <View className="flex-auto justify-center items-center">
+                        <View className="flex-auto items-center">
                         <Pressable onPress={() => {
                             setSelected({});
                         }}>
                             <FlatList
                             data={Object.keys(inventory)}
                             numColumns={3}
+                            extraData={refreshFlatlist}
                             renderItem={({item}) => {
                                 const [category, code] = item.split("-");
                                 const count = inventory[item];
