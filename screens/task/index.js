@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { StyleSheet, View, Pressable, Text, Image, TouchableOpacity, Keyboard, ScrollView, Modal, TextInput, Button, Dimensions } from 'react-native';
-import Task from './components/taskformat';
+import { StyleSheet, View, Pressable, Text, Image, TouchableOpacity, Keyboard, ScrollView, Modal, TextInput, Button, Dimensions, LogBox} from 'react-native';
 import { CountdownCircleTimer } from 'react-native-countdown-circle-timer'
 import { SelectList } from 'react-native-dropdown-select-list';
 import { AntDesign, MaterialIcons, Ionicons } from '@expo/vector-icons';
@@ -13,8 +12,12 @@ export function TaskScreen({ navigation }) {
   const [isModalVisible1, setModalVisible1] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
   const [task, setTask] = React.useState();
+  const [date, setDate] = React.useState();
   const [desc, setDesc] = React.useState();
   const [taskItems, setTaskItems] = React.useState([]);
+  const [dateItems, setDateItems] = React.useState([]);
+  const [descItems, setDescItems] = React.useState([]);
+  let [option, setOption] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
 
   const togglePause = () => {
@@ -33,25 +36,64 @@ export function TaskScreen({ navigation }) {
   const handleAddTask = () => {
     Keyboard.dismiss();
     setTaskItems([...taskItems, task])
+    setDateItems([...dateItems, date])
+    setDescItems([...descItems, desc])
     setTask(null);
+    setDate(null);
     setDesc(null);
-    setModalVisible(false);
+    setModalVisible(!isModalVisible);
   }
 
+  const handleUpdatedTask = (index) => {
+    Keyboard.dismiss();
+    let tasksCopy = [...taskItems];
+    tasksCopy[index] = task;
+    setTaskItems(tasksCopy)
+
+    let datesCopy = [...dateItems];
+    datesCopy[index] = date;
+    setDateItems(datesCopy)
+
+    let descsCopy = [...descItems];
+    descsCopy[index] = desc;
+    setDescItems(descsCopy)
+
+    setTask(null);
+    setDate(null);
+    setDesc(null);
+    setModalVisible(!isModalVisible);
+  }
+  
   const deleteTask = (index) => {
-    let itemsCopy = [...taskItems];
-    itemsCopy.splice(index, 1);
-    setTaskItems(itemsCopy)
+    let tasksCopy = [...taskItems];
+    tasksCopy.splice(index, 1);
+    setTaskItems(tasksCopy)
+
+    let datesCopy = [...dateItems];
+    datesCopy.splice(index, 1);
+    setDateItems(datesCopy)
+
+    let descsCopy = [...descItems];
+    descsCopy.splice(index, 1);
+    setDescItems(descsCopy)
   }
 
   const editTask = (index) => {
-    let itemsCopy = [...taskItems];
-    setTaskItems(itemsCopy)
+    toggleModalVisibility();
+    placeholderTask = taskItems[index];
+    placeholderDate = dateItems[index];
+    placeholderDesc = descItems[index];
   }
 
   const checkTask = (index) => {
-    let itemsCopy = [...taskItems];
-    setTaskItems(itemsCopy)
+    toggleModalVisibility();
+    placeholderTask = taskItems[index];
+    placeholderDate = dateItems[index];
+    placeholderDesc = descItems[index];
+  }
+
+  const makeGlobal = (index) => {
+    global.index = index;
   }
 
   const toggleModalVisibility = () => {
@@ -77,16 +119,27 @@ export function TaskScreen({ navigation }) {
               data={data} 
               save="value"
           />
-        
+
         <View style = {{paddingBottom:35, flex:1}}>
         <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps='handled'>
 
         {
-          taskItems.map((item, index) => {
-            return (
-              <TouchableOpacity key={index}  onPress={() => deleteTask(index)}>
-                  <Task text={item} /> 
-                </TouchableOpacity>
+            taskItems.map((item, index) => {
+              return (
+                <View style={styles.container}>
+                <View style={styles.taskContainer}>
+                    <Text style={styles.task}>{item}</Text>
+                    <TouchableOpacity key={3*index} onPress={() => {checkTask(index), setOption(2), makeGlobal(index)}}>
+                        <AntDesign style={styles.check} name="eyeo" size={22} color='#fff' />
+                    </TouchableOpacity>
+                    <TouchableOpacity key={3*index + 1} onPress={() => {editTask(index), setOption(1), makeGlobal(index)}}>
+                        <AntDesign style={styles.edit} name="edit" size={22} color='#fff' />
+                    </TouchableOpacity> 
+                    <TouchableOpacity key={3*index + 2} onPress={() => deleteTask(index)}>
+                        <MaterialIcons style={styles.delete} name="delete" size={22} color='#fff' />
+                    </TouchableOpacity>
+                </View>
+                </View>
               )
             })
           }
@@ -158,32 +211,55 @@ export function TaskScreen({ navigation }) {
             </Modal>
         </View> 
 
-        <TouchableOpacity onPress={toggleModalVisibility}>
+        <TouchableOpacity onPress={() => {toggleModalVisibility(); setOption(0)}}>
             <AntDesign style={styles.plus} name="plussquare" size={30} color='#7B1113' />
         </TouchableOpacity>
-        
-        {isModalVisible ? <Modal animationType="slide" 
+
+        <Modal animationType="slide" 
                    transparent visible={isModalVisible} 
                    presentationStyle="overFullScreen" 
                    onDismiss={toggleModalVisibility}>
             <View style={styles.viewWrapper}>
                 <View style={styles.modalView}>
                     <Text style={{width: '90%', fontSize: 16, position:'absolute', top:10}}>Task Name</Text>
-                    <TextInput placeholder="Enter something..." 
+                    {option === 0 && <TextInput placeholder="Enter something..."
                                 value={task} style={styles.taskName} 
-                                onChangeText={text => setTask(text)} />
-                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:100}}>Task Description</Text>
-                    <TextInput placeholder="Enter something..." 
+                                onChangeText={text => setTask(text)} />}
+                    {option === 1 && <TextInput defaultValue={placeholderTask}
+                                style={styles.taskName} 
+                                onChangeText={text => setTask(text)} />}
+                    {option === 2 && <TextInput defaultValue={placeholderTask}
+                                style={styles.taskName} 
+                                readOnly={true} />}
+                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:100}}>Date Due</Text>
+                    {option === 0 && <TextInput placeholder="Enter something..."
+                                value={date} style={styles.taskDate}
+                                onChangeText={text => setDate(text)} />}
+                    {option === 1 && <TextInput defaultValue={placeholderDate} 
+                                style={styles.taskDate}
+                                onChangeText={text => setDate(text)} />}
+                    {option === 2 && <TextInput defaultValue={placeholderDate}
+                                style={styles.taskDate}
+                                readOnly={true} />}
+                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:190}}>Task Description</Text>
+                    {option === 0 && <TextInput placeholder="Enter something..."
                                 value={desc} textAlignVertical='top' style={styles.taskDesc} 
-                                onChangeText={desc => setDesc(desc)} />
+                                onChangeText={desc => setDesc(desc)} />}
+                    {option === 1 && <TextInput defaultValue={placeholderDesc}
+                                textAlignVertical='top' style={styles.taskDesc} 
+                                onChangeText={desc => setDesc(desc)} />}
+                    {option === 2 && <TextInput defaultValue={placeholderDesc}
+                                textAlignVertical='top' style={styles.taskDesc} 
+                                readOnly={true} />}                                
                     <View style={{flexDirection: 'row', position: 'absolute', bottom: 15}}>
                     <Button title="Close" onPress={toggleModalVisibility} color='#7B1113'/>
                     <View style={{width: 150}} />
-                    <Button title="Add Task" onPress={() => handleAddTask()} color='#7B1113' />
+                    {option === 0 && <Button title="Add Task" onPress={() => { handleAddTask(); }} color='#7B1113' />}
+                    {option === 1 && <Button title="Edit Task" onPress={() => { handleUpdatedTask(global.index); }} color='#7B1113' />}
                     </View>
                 </View>
             </View>
-        </Modal> : <></>}
+        </Modal>
 
       </View>
 
@@ -261,9 +337,20 @@ export function TaskScreen({ navigation }) {
         marginBottom: 8,
         top:40,
     },
+    taskDate: {
+      width: "85%",
+      position: "absolute",
+      borderRadius: 5,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderColor: "rgba(0, 0, 0, 0.2)",
+      borderWidth: 1,
+      marginBottom: 8,
+      top:130,
+  },
     taskDesc: {
         width: "85%",
-        height: "60%",
+        height: "42.5%",
         position: "absolute",
         borderRadius: 5,
         paddingVertical: 8,
@@ -271,6 +358,28 @@ export function TaskScreen({ navigation }) {
         borderColor: "rgba(0, 0, 0, 0.2)",
         borderWidth: 1,
         marginBottom: 8,
-        top:130,
+        top:220,
     },
+    container: {
+      flexDirection: 'row',
+  },
+  index: {
+      color: '#fff',
+      fontSize: 20,
+  },
+  taskContainer: {
+      backgroundColor: '#7B1113',
+      borderRadius: 12,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingVertical: 5,
+      minHeight: 50,
+      marginTop: 20,
+  },
 });
+
+LogBox.ignoreLogs(['Warning: ...']);
+LogBox.ignoreAllLogs();
