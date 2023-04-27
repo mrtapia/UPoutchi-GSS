@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Button } from 'react-native';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
 
 const taskformat = (props) => {
@@ -19,9 +19,7 @@ const taskformat = (props) => {
                 </TouchableOpacity>
             </View>
         </View>
-    )
-
-}
+    )};
 
 const styles = StyleSheet.create({
     container: {
@@ -57,6 +55,9 @@ const styles = StyleSheet.create({
     delete: {
         marginLeft: 0,
     },
+    start: {
+        marginLeft: -80
+    }
 });
 
 export default taskformat;

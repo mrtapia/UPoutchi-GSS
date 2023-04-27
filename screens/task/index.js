@@ -1,18 +1,34 @@
 import * as React from 'react';
 import { StyleSheet, View, Pressable, Text, Image, TouchableOpacity, Keyboard, ScrollView, Modal, TextInput, Button, Dimensions } from 'react-native';
 import Task from './components/taskformat';
+import { CountdownCircleTimer } from 'react-native-countdown-circle-timer'
 import { SelectList } from 'react-native-dropdown-select-list';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { AntDesign, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get("window");
 
 export function TaskScreen({ navigation }) {
   const [selected, setSelected] = React.useState("");
   const [isModalVisible, setModalVisible] = React.useState(false);
+  const [isModalVisible1, setModalVisible1] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
   const [task, setTask] = React.useState();
   const [desc, setDesc] = React.useState();
   const [taskItems, setTaskItems] = React.useState([]);
+  const [isPaused, setIsPaused] = React.useState(false);
+
+  const togglePause = () => {
+      setIsPaused(!isPaused);
+  }
+
+  const children = ({ remainingTime }) => {
+    const minutes = Math.floor(remainingTime / 60)
+    const seconds = remainingTime % 60
+    if (seconds <= 9){
+      return `${minutes}:0${seconds}`
+    }
+    else return `${minutes}:${seconds}`
+  }
 
   const handleAddTask = () => {
     Keyboard.dismiss();
@@ -61,14 +77,14 @@ export function TaskScreen({ navigation }) {
               data={data} 
               save="value"
           />
-
+        
         <View style = {{paddingBottom:35, flex:1}}>
         <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps='handled'>
 
         {
-            taskItems.map((item, index) => {
-              return (
-                <TouchableOpacity key={index}  onPress={() => deleteTask(index)}>
+          taskItems.map((item, index) => {
+            return (
+              <TouchableOpacity key={index}  onPress={() => deleteTask(index)}>
                   <Task text={item} /> 
                 </TouchableOpacity>
               )
@@ -77,6 +93,70 @@ export function TaskScreen({ navigation }) {
 
         </ScrollView>
         </View>
+        <View style={{marginTop:-20 ,alignItems: "center", justifyContent: "center"}}>
+            <Button
+                title="Start timer"
+                color='#3C78AF'
+                onPress={() => {
+                  setModalVisible1(true);
+                }}
+            />
+            <Modal
+            visible = {isModalVisible1}
+            transparent = {true}
+            animationType='slide'
+            onRequestClose = {() => {setModalVisible1(false)}}
+            presentationStyle="overFullScreen" 
+            >
+              <View style={{
+                top: "50%",
+                left: "50%",
+                elevation: 5,
+                transform: [{ translateX: -(width * 0.4) }, 
+                            { translateY: -200 }],
+                borderRadius: 14,
+                backgroundColor: '#fff',
+                padding: 20,
+                width: '80%',
+                height: '50%',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+                <CountdownCircleTimer
+                  duration={300}
+                  colors={['#004777', '#F7B801', '#A30000', '#A30000']}
+                  colorsTime={[7, 5, 2, 0]}
+                  isPlaying={!isPaused}
+                >
+                  {({ remainingTime }) => <Text style = {{fontSize: 50, fontWeight: 'bold'}}>{children({remainingTime})}</Text>}
+                </CountdownCircleTimer>
+                <View style={{ flexDirection: 'row', marginTop: 20 }}>
+                  <View style={{ backgroundColor: '#161819', borderRadius: 40 , marginHorizontal: 15}}>
+                    <Ionicons
+                    name={isPaused ? 'play' : 'pause'}
+                    title={isPaused ? 'Resume' : 'Pause'}
+                    onPress={togglePause}
+                    size={40}
+                    color="#3C78AF"
+                    style={{ padding: 15 }}
+                    />
+                  </View>
+                  <View style={{ backgroundColor: '#161819', borderRadius: 40, marginHorizontal: 15}}>
+                    <Ionicons 
+                    name="stop" 
+                    title="Cancel"
+                    onPress={() => {
+                      setModalVisible1(false);
+                    }}
+                    size={40} 
+                    color="#3C78AF" 
+                    style={{ padding: 15 }}
+                    />
+                  </View>
+                </View>
+              </View>
+            </Modal>
+        </View> 
 
         <TouchableOpacity onPress={toggleModalVisibility}>
             <AntDesign style={styles.plus} name="plussquare" size={30} color='#7B1113' />
@@ -104,7 +184,6 @@ export function TaskScreen({ navigation }) {
                 </View>
             </View>
         </Modal> : <></>}
-        
 
       </View>
 
