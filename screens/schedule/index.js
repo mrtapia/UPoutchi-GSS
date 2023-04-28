@@ -3,10 +3,32 @@ import { StyleSheet, View, Text, Alert, TouchableOpacity, Modal, Button, TextInp
 import {Calendar, AgendaSchedule} from 'react-native-calendars';
 import { SelectList } from 'react-native-dropdown-select-list';
 import { AntDesign } from '@expo/vector-icons';
+import WeekView from 'react-native-week-view';
 
 const { width } = Dimensions.get("window");
 
 export function ScheduleScreen({ navigation }) {
+  //dates
+  const myEvents = [
+    {
+      id: 1,
+      startDate: new Date(2023, 3, 26, 7),
+      endDate: new Date(2023, 3, 26, 9),
+      color: 'blue',
+      description: 'E1',
+      // ... more properties if needed,
+    },
+    {
+      id: 2,
+      startDate: new Date(2023, 3, 28, 7),
+      endDate: new Date(2023, 3, 28, 10, 30),
+      color: 'red',
+      description: 'E2',
+    },
+    // more events...
+  ];
+  //enddates
+
   const [selected, setSelected] = React.useState("");
   const [isModalVisible, setModalVisible] = React.useState(false);
   let [option, setOption] = React.useState(0);
@@ -68,6 +90,14 @@ export function ScheduleScreen({ navigation }) {
           onPressArrowRight={addMonth => addMonth()}
           // Disable all touch events for disabled days. can be override with disableTouchEvent in markedDates
           disableAllTouchEventsForDisabledDays={true}
+          />
+        )}
+        {!!selected && (selected === 'Weekly' || selected === '2') && (
+          <WeekView
+          events={myEvents}
+          selectedDate={new Date(2023, 3, 28, 12)}
+          numberOfDays={7}
+          pageStartAt={{ weekday: 1 }}
           />
         )}
         </View>
