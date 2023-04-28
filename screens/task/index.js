@@ -19,6 +19,9 @@ export function TaskScreen({ navigation }) {
   const [descItems, setDescItems] = React.useState([]);
   let [option, setOption] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
+  const [placeholderTask, setPlaceholderTask] = React.useState("");
+  const [placeholderDate, setPlaceholderDate] = React.useState("");
+  const [placeholderDesc, setPlaceholderDesc] = React.useState("");
 
   const togglePause = () => {
       setIsPaused(!isPaused);
@@ -47,20 +50,20 @@ export function TaskScreen({ navigation }) {
   const handleUpdatedTask = (index) => {
     Keyboard.dismiss();
     let tasksCopy = [...taskItems];
-    tasksCopy[index] = task;
+    tasksCopy[index] = placeholderTask;
     setTaskItems(tasksCopy)
 
     let datesCopy = [...dateItems];
-    datesCopy[index] = date;
+    datesCopy[index] = placeholderDate;
     setDateItems(datesCopy)
 
     let descsCopy = [...descItems];
-    descsCopy[index] = desc;
+    descsCopy[index] = placeholderDesc;
     setDescItems(descsCopy)
 
-    setTask(null);
-    setDate(null);
-    setDesc(null);
+    setPlaceholderTask(null);
+    setPlaceholderDate(null);
+    setPlaceholderDesc(null);
     setModalVisible(false);
   }
   
@@ -80,16 +83,16 @@ export function TaskScreen({ navigation }) {
 
   const editTask = (index) => {
     setModalVisible(true);
-    placeholderTask = taskItems[index];
-    placeholderDate = dateItems[index];
-    placeholderDesc = descItems[index];
+    setPlaceholderTask(taskItems[index]);
+    setPlaceholderDate(dateItems[index]);
+    setPlaceholderDesc(descItems[index]);
   }
 
   const checkTask = (index) => {
     setModalVisible(true);
-    placeholderTask = taskItems[index];
-    placeholderDate = dateItems[index];
-    placeholderDesc = descItems[index];
+    setPlaceholderTask(taskItems[index]);
+    setPlaceholderDate(dateItems[index]);
+    setPlaceholderDesc(descItems[index]);
   }
 
   const makeGlobal = (index) => {
@@ -221,30 +224,30 @@ export function TaskScreen({ navigation }) {
                     {option === 0 && <TextInput placeholder="Enter something..."
                                 value={task} style={styles.taskName} 
                                 onChangeText={text => setTask(text)} />}
-                    {option === 1 && <TextInput defaultValue={placeholderTask}
+                    {option === 1 && <TextInput value={placeholderTask}
                                 style={styles.taskName} 
-                                onChangeText={text => setTask(text)} />}
-                    {option === 2 && <TextInput defaultValue={placeholderTask}
+                                onChangeText={text => setPlaceholderTask(text)} />}
+                    {option === 2 && <TextInput value={placeholderTask}
                                 style={styles.taskName} 
                                 readOnly={true} />}
                     <Text style={{width: '90%', fontSize: 16, position:'absolute', top:100}}>Date Due</Text>
                     {option === 0 && <TextInput placeholder="Enter something..."
                                 value={date} style={styles.taskDate}
                                 onChangeText={text => setDate(text)} />}
-                    {option === 1 && <TextInput defaultValue={placeholderDate} 
+                    {option === 1 && <TextInput value={placeholderDate} 
                                 style={styles.taskDate}
-                                onChangeText={text => setDate(text)} />}
-                    {option === 2 && <TextInput defaultValue={placeholderDate}
+                                onChangeText={text => setPlaceholderDate(text)} />}
+                    {option === 2 && <TextInput value={placeholderDate}
                                 style={styles.taskDate}
                                 readOnly={true} />}
                     <Text style={{width: '90%', fontSize: 16, position:'absolute', top:190}}>Task Description</Text>
                     {option === 0 && <TextInput placeholder="Enter something..."
                                 value={desc} textAlignVertical='top' style={styles.taskDesc} 
                                 onChangeText={desc => setDesc(desc)} />}
-                    {option === 1 && <TextInput defaultValue={placeholderDesc}
+                    {option === 1 && <TextInput value={placeholderDesc}
                                 textAlignVertical='top' style={styles.taskDesc} 
-                                onChangeText={desc => setDesc(desc)} />}
-                    {option === 2 && <TextInput defaultValue={placeholderDesc}
+                                onChangeText={desc => setPlaceholderDesc(desc)} />}
+                    {option === 2 && <TextInput value={placeholderDesc}
                                 textAlignVertical='top' style={styles.taskDesc} 
                                 readOnly={true} />}                                
                     <View style={{flexDirection: 'row', position: 'absolute', bottom: 15}}>
