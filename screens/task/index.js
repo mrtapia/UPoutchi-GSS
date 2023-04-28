@@ -41,7 +41,7 @@ export function TaskScreen({ navigation }) {
     setTask(null);
     setDate(null);
     setDesc(null);
-    setModalVisible(!isModalVisible);
+    setModalVisible(false);
   }
 
   const handleUpdatedTask = (index) => {
@@ -61,7 +61,7 @@ export function TaskScreen({ navigation }) {
     setTask(null);
     setDate(null);
     setDesc(null);
-    setModalVisible(!isModalVisible);
+    setModalVisible(false);
   }
   
   const deleteTask = (index) => {
@@ -79,14 +79,14 @@ export function TaskScreen({ navigation }) {
   }
 
   const editTask = (index) => {
-    toggleModalVisibility();
+    setModalVisible(true);
     placeholderTask = taskItems[index];
     placeholderDate = dateItems[index];
     placeholderDesc = descItems[index];
   }
 
   const checkTask = (index) => {
-    toggleModalVisibility();
+    setModalVisible(true);
     placeholderTask = taskItems[index];
     placeholderDate = dateItems[index];
     placeholderDesc = descItems[index];
@@ -95,10 +95,6 @@ export function TaskScreen({ navigation }) {
   const makeGlobal = (index) => {
     global.index = index;
   }
-
-  const toggleModalVisibility = () => {
-    setModalVisible(!isModalVisible);
-    };
 
   const data = [
       {key:'1', value:'Today'},
@@ -211,14 +207,14 @@ export function TaskScreen({ navigation }) {
             </Modal>
         </View> 
 
-        <TouchableOpacity onPress={() => {toggleModalVisibility(); setOption(0)}}>
+        <TouchableOpacity onPress={() => {setModalVisible(true); setOption(0);}}>
             <AntDesign style={styles.plus} name="plussquare" size={30} color='#7B1113' />
         </TouchableOpacity>
 
         <Modal animationType="slide" 
                    transparent visible={isModalVisible} 
                    presentationStyle="overFullScreen" 
-                   onDismiss={toggleModalVisibility}>
+                   onDismiss={() => setModalVisible(false)}>
             <View style={styles.viewWrapper}>
                 <View style={styles.modalView}>
                     <Text style={{width: '90%', fontSize: 16, position:'absolute', top:10}}>Task Name</Text>
@@ -252,7 +248,7 @@ export function TaskScreen({ navigation }) {
                                 textAlignVertical='top' style={styles.taskDesc} 
                                 readOnly={true} />}                                
                     <View style={{flexDirection: 'row', position: 'absolute', bottom: 15}}>
-                    <Button title="Close" onPress={toggleModalVisibility} color='#7B1113'/>
+                    <Button title="Close" onPress={() => setModalVisible(false)} color='#7B1113'/>
                     <View style={{width: 150}} />
                     {option === 0 && <Button title="Add Task" onPress={() => { handleAddTask(); }} color='#7B1113' />}
                     {option === 1 && <Button title="Edit Task" onPress={() => { handleUpdatedTask(global.index); }} color='#7B1113' />}
