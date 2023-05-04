@@ -8,7 +8,7 @@ import { StartUpScreen } from './screens/entry';
 import { LoginScreen } from './screens/entry/login';
 import { SignUpScreen, PoutchiSignUpScreen } from './screens/entry/signup';
 import { HomeScreen } from './screens/home';
-import { ScheduleScreen } from './screens/schedule';
+import { FocusScreen } from './screens/focus';
 import { TaskScreen } from './screens/task';
 import { DashboardScreen } from './screens/dashboard';
 import { AuthContextProvider, UserAuth, TempAuthContext } from './contexts/AuthContext';
@@ -56,11 +56,11 @@ function Navigators() {
               <Entypo name="home" size={24} color={color} />
             ),
           }}/>
-          <Tab.Screen name="Schedule" component={ScheduleScreen} 
+          <Tab.Screen name="Focus" component={FocusScreen} 
           options={{
-            tabBarLabel: 'Schedule',
+            tabBarLabel: 'Focus',
             tabBarIcon: ({ color }) => (
-              <Entypo name="calendar" size={24} color={color} />
+              <MaterialIcons name="timer" size={24} color={color} />
             ),
           }}/>
           <Tab.Screen name="Task" component={TaskScreen} 

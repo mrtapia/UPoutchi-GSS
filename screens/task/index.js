@@ -6,6 +6,84 @@ import { AntDesign, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get("window");
 
+/* 
+Notes:
+Date today: 5/4/2023
+Today: All tasks with due dates set to 5/4/2023
+Overdue: tasks with due date set before 5/4/2023
+Pending: Today's tasks + Overdue tasks 
+Tomorrow: tasks with due date set to 5/5/2023
+Next 7 Days: tasks with due date set to 5/4/2023 to 5/10/2023 (di siya necessarily Monday to Sunday, basta next 7 days)
+Completed: All completed tasks
+All: Overdue + All unfinished tasks (regardless of date)
+
+Priority levels: [1,5] ?
+5 - top priority
+*/
+
+const dummy_data = [
+  {
+    due_date: '5/2/2023, 11:30:00 AM', // overdue, pending, all
+    // code for this date format: const date = new Date().toLocaleString();
+    task_name: 'Exercise',
+    priority: 1,
+    date_completed: '', // blank means not yet completed
+    tags: [
+      "CS180", "Exercise"
+    ],
+    description: 'Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.'
+  },
+  {
+    due_date: '5/4/2023, 11:30:00 AM',  //today's, pending, all
+    task_name: 'Exersfsfcise',
+    priority: 5,
+    date_completed: '',
+    tags: [
+      "CS180"
+    ],
+    description: 'adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.'
+  },
+  {
+    due_date: '5/1/2023, 11:30:00 AM',  //completed
+    task_name: 'aadfaewr',
+    priority: 3,
+    date_completed: '5/1/2023 11:30:00 AM',
+    tags: [
+      "CS180"
+    ],
+    description: 'adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.'
+  },
+  {
+    due_date: '5/5/2023, 11:30:00 AM',  //tomorrow, all
+    task_name: 'sswfewr',
+    priority: 4,
+    date_completed: '',
+    tags: [
+      "CS180"
+    ],
+    description: 'adasdasdNeqqui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.'
+  },
+  {
+    due_date: '5/8/2023, 11:30:00 AM', //next 7 days, all
+    task_name: 'Exersfsfcise',
+    priority: 3,
+    date_completed: '',
+    tags: [
+      "CS180"
+    ],
+    description: 'adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.'
+  },{
+    due_date: '5/20/2023, 11:30:00 AM', // all
+    task_name: 'sfsfz',
+    priority: 2,
+    date_completed: '',
+    tags: [
+      
+    ],
+    description: 'adasdaum quia dolor sit amet, consectetur, adipisci velit.'
+  },
+];
+
 export function TaskScreen({ navigation }) {
   const [selected, setSelected] = React.useState("");
   const [isModalVisible, setModalVisible] = React.useState(false);
@@ -104,8 +182,9 @@ export function TaskScreen({ navigation }) {
       {key:'2', value:'Pending'},
       {key:'3', value:'Overdue'},
       {key:'4', value:'Tomorrow'},
-      {key:'5', value:'This Week'},
+      {key:'5', value:'Next 7 Days'}, // changed from This Week
       {key:'6', value:'Completed'},
+      {key:'7', value:'All'}, // added to include tasks with due date ahead of 8 days from today
   ]
 
     return(
@@ -125,7 +204,7 @@ export function TaskScreen({ navigation }) {
         {
             taskItems.map((item, index) => {
               return (
-                <View style={styles.container}>
+                <View style={styles.container} key={index}>
                 <View style={styles.taskContainer}>
                     <Text style={styles.task}>{item}</Text>
                     <TouchableOpacity key={3*index} onPress={() => {checkTask(index), setOption(2), makeGlobal(index)}}>
