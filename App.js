@@ -52,17 +52,20 @@ function Navigators() {
       if (docSnap.exists()) {
           let data = docSnap.data();
           const datenow = new Date().toLocaleString();
+          let diff = 0;
           Object.keys(data.stats).forEach((key) => {
             const datenow_formatted = moment(datenow, "M/D/YYYY, h:mm:ss A", true);
             const last_updated = moment((data.stats[key].updated).toString(), "M/D/YYYY, h:mm:ss A", true);
-            const diff = Math.floor((datenow_formatted - last_updated)/1000/60/30);
+            diff = Math.floor((datenow_formatted - last_updated)/1000/60/30);
             data.stats[key].value = data.stats[key].value - diff;
             data.stats[key].updated = datenow;
           });
           console.log("loop");
-          await updateDoc(userRef, {
-            stats: data.stats
-        });
+          if (diff > 0) {
+            await updateDoc(userRef, {
+              stats: data.stats
+            });
+          }
           setStats(data.stats);
       }
     }
