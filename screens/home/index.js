@@ -32,8 +32,7 @@ export function HomeScreen ({ navigation }) {
             Object.keys(data.stats).forEach((key) => {
               const datenow_formatted = moment(datenow, "M/D/YYYY, h:mm:ss A", true);
               const last_updated = moment((data.stats[key].updated).toString(), "M/D/YYYY, h:mm:ss A", true);
-              const diff = Math.ceil((datenow_formatted - last_updated)/1000/60/30);
-              console.log("loop");
+              const diff = Math.floor((datenow_formatted - last_updated)/1000/60/30);
               data.stats[key].value = data.stats[key].value - diff;
               data.stats[key].updated = datenow;
             });
