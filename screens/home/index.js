@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Animated, StyleSheet, Dimensions, Image, Pressable } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, Animated, StyleSheet, Dimensions, Image, Pressable, ActivityIndicator } from 'react-native';
 import { Entypo } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
@@ -8,29 +8,47 @@ import { GLView } from 'expo-gl';
 import { Asset } from 'expo-asset';
 import Expo2DContext from 'expo-2d-context';
 import { Inventory } from '../../components/home/inventory';
+import { UserAuth, UserInfoContext } from '../../contexts/AuthContext';
+import { db } from '../../lib/firebase';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import moment from 'moment';
 const {height, width} = Dimensions.get("screen");
 const SPRITE_SHEET = require('../../assets/poutchi/spritesheet.png');
 
 export function HomeScreen ({ navigation }) {
+  const { user } = UserAuth();
+  const {updateInventory, stats, updateStats} = useContext(UserInfoContext);
+  const [isLoading, setIsLoading] = useState(true);
   const [visible, setVisible] = useState(false);
-  const [health, setHealth] = useState(60);
-  const [hunger, setHunger] = useState(60);
-  const [hygiene, setHygiene] = useState(60);
-  const [entertainment, setEntertainment] = useState(60);
+
+  useEffect(() => {
+    const getData = async () => {
+      const userRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+            let data = docSnap.data();
+            updateInventory(data.inventory);
+            const datenow = moment();
+            Object.keys(data.stats).forEach((key) => {
+              const last_updated = moment((data.stats[key].updated).toString(), "M/D/YYYY, h:mm:ss A", true);
+              const diff = Math.ceil((datenow - last_updated)/1000/60/30);
+              data.stats[key].value = data.stats[key].value - diff;
+            })
+            await updateDoc(userRef, {
+              stats: data.stats
+          });
+            updateStats(data.stats);
+        }
+        setIsLoading(false);
+    }
+    getData();
+  }, []);
   
   return (
     <>
       <Inventory 
         visible={visible} 
         setVisible={setVisible}
-        health={health}
-        setHealth={setHealth}
-        hunger={hunger}
-        setHunger={setHunger}
-        hygiene={hygiene}
-        setHygiene={setHygiene}
-        entertainment={entertainment}
-        setEntertainment={setEntertainment}
       />
       <View className="bg-[#232528] flex-auto justify-start">
         <View className=" mt-4 mx-4 flex flex-row justify-between items-baseline">
@@ -39,17 +57,22 @@ export function HomeScreen ({ navigation }) {
             <Entypo name="box" size={40} color="#3C78AF" />
           </Pressable>
         </View>
-        <View className="my-2 mx-4 flex flex-row justify-start items-center">
+        {isLoading ? <ActivityIndicator className="flex-1" color="#3C78AF" size={'large'}/> : 
+        <>
+          <View className="my-2 mx-4 flex flex-row justify-start items-center">
           <Entypo name="heart" size={24} color="#3C78AF" />
-          <Text className="ml-1 mr-4 text-white text-lg">{health}</Text>
+          <Text className="ml-1 mr-4 text-white text-lg">{stats.HE.value}</Text>
           <Ionicons name="fast-food" size={24} color="#3C78AF" />
-          <Text className="ml-1 mr-4 text-white text-lg">{hunger}</Text>
+          <Text className="ml-1 mr-4 text-white text-lg">{stats.HU.value}</Text>
           <FontAwesome name="bathtub" size={24} color="#3C78AF" />
-          <Text className="ml-1 mr-4 text-white text-lg">{hygiene}</Text>
+          <Text className="ml-1 mr-4 text-white text-lg">{stats.HY.value}</Text>
           <FontAwesome name="smile-o" size={24} color="#3C78AF" />
-          <Text className="ml-1 mr-4 text-white text-lg">{entertainment}</Text>
+          <Text className="ml-1 mr-4 text-white text-lg">{stats.EN.value}</Text>
         </View>
-        <GLView className="mt-16" style={{width: width, height: width}} onContextCreate={(gl) => _onContextCreate(gl)}/>
+        {/* <GLView className="mt-16" style={{width: width, height: width}} onContextCreate={(gl) => _onContextCreate(gl)}/> */}
+        </>
+        }
+        
       </View>
     </>
   );

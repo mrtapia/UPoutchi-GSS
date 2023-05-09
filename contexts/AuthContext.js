@@ -18,10 +18,10 @@ import { auth, db } from "../lib/firebase";
 
 const AuthContext = createContext();
 export const TempAuthContext = createContext(false);
+export const UserInfoContext = createContext({});
 
 export const AuthContextProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [userInfo, setUserInfo] =useState({});
 
     const isEmailAvailable = async (email) => {
       const q = query(collection(db, "users"), where("email", "==", email));
@@ -32,15 +32,7 @@ export const AuthContextProvider = ({ children }) => {
 
     const signIn = async (email, password) => {
         await signInWithEmailAndPassword(auth, email, password)
-        .then(async (userCredential) => {
-            const user = userCredential.user;
-            const docRef = doc(db, "users", user.uid);
-            const docSnap = await getDoc(docRef);
-          
-            if (docSnap.exists()) {
-              const data = docSnap.data();
-              setUserInfo(data);
-            }
+        .then((userCredential) => {
             return true;
         })
         .catch((error) => {
@@ -54,12 +46,32 @@ export const AuthContextProvider = ({ children }) => {
   const signUp = async (email, password, firstname, lastname, upoutchi) => {
     await createUserWithEmailAndPassword(auth, email, password)
     .then(async (userCredential) => {
+        const datenow = new Date().toLocaleString();
         const user = userCredential.user;
         await setDoc(doc(db, "users", user.uid), {
             firstname: firstname,
             lastname: lastname,
             email: email,
-            upoutchi: upoutchi
+            upoutchi: upoutchi,
+            stats: {
+              EN: {
+                value: 60,
+                updated: datenow
+              },
+              HE: {
+                value: 60,
+                updated: datenow
+              },
+              HU: {
+                value: 60,
+                updated: datenow
+              },
+              HY: {
+                value: 60,
+                updated: datenow
+              }
+            },
+            inventory: {}
           });
         return true;
     })
@@ -73,12 +85,13 @@ export const AuthContextProvider = ({ children }) => {
 
   const logOut = () => {
     signOut(auth);
-    setUserInfo({});
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        if(currentUser) setUser(currentUser);
+        if(currentUser) {
+          setUser(currentUser);
+        }
         else setUser(null);
     });
     return () => {
@@ -88,7 +101,7 @@ export const AuthContextProvider = ({ children }) => {
   
   return (
     <AuthContext.Provider
-      value={{ signIn, signUp, logOut, isEmailAvailable, user, userInfo }}
+      value={{ signIn, signUp, logOut, isEmailAvailable, user }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,8 +1,11 @@
 import * as React from 'react';
-import { StyleSheet, View, Pressable, Text, Image, TouchableOpacity, Keyboard, ScrollView, Modal, TextInput, Button, Dimensions, LogBox} from 'react-native';
-import { CountdownCircleTimer } from 'react-native-countdown-circle-timer'
+import { StyleSheet, View, Pressable, Text, Image, 
+  TouchableOpacity, Keyboard, ScrollView, Modal, 
+  TextInput, Button, Dimensions, LogBox } from 'react-native';
+import Checkbox from 'expo-checkbox';
 import { SelectList } from 'react-native-dropdown-select-list';
-import { AntDesign, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { NewItemModal } from '../../components/shared/newItemModal';
 
 const { width } = Dimensions.get("window");
 
@@ -85,40 +88,29 @@ const dummy_data = [
 ];
 
 export function TaskScreen({ navigation }) {
+  const [taskList, setTaskList] = React.useState(dummy_data);
   const [selected, setSelected] = React.useState("");
   const [isModalVisible, setModalVisible] = React.useState(false);
-  const [isModalVisible1, setModalVisible1] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState("");
+  const [newItemModalVisible, setNewItemModalVisible] = React.useState(false);
   const [task, setTask] = React.useState();
   const [date, setDate] = React.useState();
   const [desc, setDesc] = React.useState();
-  const [taskItems, setTaskItems] = React.useState([]);
-  const [dateItems, setDateItems] = React.useState([]);
-  const [descItems, setDescItems] = React.useState([]);
   let [option, setOption] = React.useState(0);
-  const [isPaused, setIsPaused] = React.useState(false);
   const [placeholderTask, setPlaceholderTask] = React.useState("");
   const [placeholderDate, setPlaceholderDate] = React.useState("");
   const [placeholderDesc, setPlaceholderDesc] = React.useState("");
 
-  const togglePause = () => {
-      setIsPaused(!isPaused);
-  }
-
-  const children = ({ remainingTime }) => {
-    const minutes = Math.floor(remainingTime / 60)
-    const seconds = remainingTime % 60
-    if (seconds <= 9){
-      return `${minutes}:0${seconds}`
-    }
-    else return `${minutes}:${seconds}`
-  }
-
   const handleAddTask = () => {
     Keyboard.dismiss();
-    setTaskItems([...taskItems, task])
-    setDateItems([...dateItems, date])
-    setDescItems([...descItems, desc])
+    const new_task = {
+      due_date: date,
+      task_name: task,
+      priority: 1,
+      date_completed: '',
+      tags: [],
+      description: desc
+    };
+    setTaskList([...taskList, new_task]);
     setTask(null);
     setDate(null);
     setDesc(null);
@@ -127,17 +119,12 @@ export function TaskScreen({ navigation }) {
 
   const handleUpdatedTask = (index) => {
     Keyboard.dismiss();
-    let tasksCopy = [...taskItems];
-    tasksCopy[index] = placeholderTask;
-    setTaskItems(tasksCopy)
-
-    let datesCopy = [...dateItems];
-    datesCopy[index] = placeholderDate;
-    setDateItems(datesCopy)
-
-    let descsCopy = [...descItems];
-    descsCopy[index] = placeholderDesc;
-    setDescItems(descsCopy)
+    let li = [...taskList];
+    
+    li[index].task_name = placeholderTask;
+    li[index].due_date = placeholderDate;
+    li[index].description = placeholderDesc;
+    setTaskList(li);
 
     setPlaceholderTask(null);
     setPlaceholderDate(null);
@@ -146,35 +133,39 @@ export function TaskScreen({ navigation }) {
   }
   
   const deleteTask = (index) => {
-    let tasksCopy = [...taskItems];
+    let tasksCopy = [...taskList];
     tasksCopy.splice(index, 1);
-    setTaskItems(tasksCopy)
-
-    let datesCopy = [...dateItems];
-    datesCopy.splice(index, 1);
-    setDateItems(datesCopy)
-
-    let descsCopy = [...descItems];
-    descsCopy.splice(index, 1);
-    setDescItems(descsCopy)
+    setTaskList(tasksCopy);
   }
 
   const editTask = (index) => {
     setModalVisible(true);
-    setPlaceholderTask(taskItems[index]);
-    setPlaceholderDate(dateItems[index]);
-    setPlaceholderDesc(descItems[index]);
+    setPlaceholderTask(taskList[index].task_name);
+    setPlaceholderDate(taskList[index].due_date);
+    setPlaceholderDesc(taskList[index].description);
   }
 
   const checkTask = (index) => {
     setModalVisible(true);
-    setPlaceholderTask(taskItems[index]);
-    setPlaceholderDate(dateItems[index]);
-    setPlaceholderDesc(descItems[index]);
+    setPlaceholderTask(taskList[index].task_name);
+    setPlaceholderDate(taskList[index].due_date);
+    setPlaceholderDesc(taskList[index].description);
   }
 
   const makeGlobal = (index) => {
     global.index = index;
+  }
+
+  const onCheck = (index) => {
+    const temp = [...taskList];
+    if (temp[index].date_completed == "") {
+      const datenow = new Date().toLocaleString();
+      temp[index].date_completed = datenow;
+      setNewItemModalVisible(true);
+    } else {
+      temp[index].date_completed = "";
+    }
+    setTaskList(temp);
   }
 
   const data = [
@@ -188,6 +179,8 @@ export function TaskScreen({ navigation }) {
   ]
 
     return(
+      <>
+      <NewItemModal visible={newItemModalVisible} setVisible={setNewItemModalVisible} action={"TASK"}/>
       <View style = {{paddingHorizontal:10, paddingVertical:15, flex:1}}>
     
         <SelectList 
@@ -202,20 +195,31 @@ export function TaskScreen({ navigation }) {
         <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps='handled'>
 
         {
-            taskItems.map((item, index) => {
+            taskList.map((item, index) => {
+              const isChecked = item.date_completed == "" ? false : true;
               return (
                 <View style={styles.container} key={index}>
-                <View style={styles.taskContainer}>
-                    <Text style={styles.task}>{item}</Text>
-                    <TouchableOpacity key={3*index} onPress={() => {checkTask(index), setOption(2), makeGlobal(index)}}>
-                        <AntDesign style={styles.check} name="eyeo" size={22} color='#fff' />
+                <View className={isChecked ? "bg-[#591b1c]" : `bg-[#7B1113]`} style={styles.taskContainer}>
+                  <View className="flex flex-row">
+                    <Checkbox className="mr-2 border-white"
+                      color={"transparent"}
+                      value={isChecked}
+                      onValueChange={() => onCheck(index)}
+                    /> 
+                    <Text className={`text-white text-base ${isChecked ? "line-through" : ""}`}>{item.task_name}</Text>
+                  </View>
+                    <View className="flex flex-row gap-2">
+                    <TouchableOpacity key={3*index} onPress={() => {checkTask(index); setOption(2); makeGlobal(index);}}>
+                        <AntDesign  name="eyeo" size={22} color='#fff' />
                     </TouchableOpacity>
-                    <TouchableOpacity key={3*index + 1} onPress={() => {editTask(index), setOption(1), makeGlobal(index)}}>
-                        <AntDesign style={styles.edit} name="edit" size={22} color='#fff' />
+                    <TouchableOpacity key={3*index + 1} onPress={() => {editTask(index); setOption(1); makeGlobal(index);}}>
+                        <AntDesign name="edit" size={22} color='#fff' />
                     </TouchableOpacity> 
                     <TouchableOpacity key={3*index + 2} onPress={() => deleteTask(index)}>
-                        <MaterialIcons style={styles.delete} name="delete" size={22} color='#fff' />
+                        <MaterialIcons  name="delete" size={22} color='#fff' />
                     </TouchableOpacity>
+                    </View>
+                    
                 </View>
                 </View>
               )
@@ -224,70 +228,6 @@ export function TaskScreen({ navigation }) {
 
         </ScrollView>
         </View>
-        <View style={{marginTop:-20 ,alignItems: "center", justifyContent: "center"}}>
-            <Button
-                title="Start timer"
-                color='#3C78AF'
-                onPress={() => {
-                  setModalVisible1(true);
-                }}
-            />
-            <Modal
-            visible = {isModalVisible1}
-            transparent = {true}
-            animationType='slide'
-            onRequestClose = {() => {setModalVisible1(false)}}
-            presentationStyle="overFullScreen" 
-            >
-              <View style={{
-                top: "50%",
-                left: "50%",
-                elevation: 5,
-                transform: [{ translateX: -(width * 0.4) }, 
-                            { translateY: -200 }],
-                borderRadius: 14,
-                backgroundColor: '#fff',
-                padding: 20,
-                width: '80%',
-                height: '50%',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-                <CountdownCircleTimer
-                  duration={300}
-                  colors={['#004777', '#F7B801', '#A30000', '#A30000']}
-                  colorsTime={[7, 5, 2, 0]}
-                  isPlaying={!isPaused}
-                >
-                  {({ remainingTime }) => <Text style = {{fontSize: 50, fontWeight: 'bold'}}>{children({remainingTime})}</Text>}
-                </CountdownCircleTimer>
-                <View style={{ flexDirection: 'row', marginTop: 20 }}>
-                  <View style={{ backgroundColor: '#161819', borderRadius: 40 , marginHorizontal: 15}}>
-                    <Ionicons
-                    name={isPaused ? 'play' : 'pause'}
-                    title={isPaused ? 'Resume' : 'Pause'}
-                    onPress={togglePause}
-                    size={40}
-                    color="#3C78AF"
-                    style={{ padding: 15 }}
-                    />
-                  </View>
-                  <View style={{ backgroundColor: '#161819', borderRadius: 40, marginHorizontal: 15}}>
-                    <Ionicons 
-                    name="stop" 
-                    title="Cancel"
-                    onPress={() => {
-                      setModalVisible1(false);
-                    }}
-                    size={40} 
-                    color="#3C78AF" 
-                    style={{ padding: 15 }}
-                    />
-                  </View>
-                </View>
-              </View>
-            </Modal>
-        </View> 
 
         <TouchableOpacity onPress={() => {setModalVisible(true); setOption(0);}}>
             <AntDesign style={styles.plus} name="plussquare" size={30} color='#7B1113' />
@@ -320,13 +260,13 @@ export function TaskScreen({ navigation }) {
                                 style={styles.taskDate}
                                 readOnly={true} />}
                     <Text style={{width: '90%', fontSize: 16, position:'absolute', top:190}}>Task Description</Text>
-                    {option === 0 && <TextInput placeholder="Enter something..."
+                    {option === 0 && <TextInput placeholder="Enter something..." multiline
                                 value={desc} textAlignVertical='top' style={styles.taskDesc} 
                                 onChangeText={desc => setDesc(desc)} />}
-                    {option === 1 && <TextInput value={placeholderDesc}
+                    {option === 1 && <TextInput value={placeholderDesc} multiline
                                 textAlignVertical='top' style={styles.taskDesc} 
                                 onChangeText={desc => setPlaceholderDesc(desc)} />}
-                    {option === 2 && <TextInput value={placeholderDesc}
+                    {option === 2 && <TextInput value={placeholderDesc} multiline
                                 textAlignVertical='top' style={styles.taskDesc} 
                                 readOnly={true} />}                                
                     <View style={{flexDirection: 'row', position: 'absolute', bottom: 15}}>
@@ -340,7 +280,7 @@ export function TaskScreen({ navigation }) {
         </Modal>
 
       </View>
-
+      </>
       
     );
   }
@@ -354,7 +294,6 @@ export function TaskScreen({ navigation }) {
         fontSize: 20,
     },
     taskContainer: {
-        backgroundColor: '#7B1113',
         borderRadius: 12,
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -446,7 +385,6 @@ export function TaskScreen({ navigation }) {
       fontSize: 20,
   },
   taskContainer: {
-      backgroundColor: '#7B1113',
       borderRadius: 12,
       flexDirection: 'row',
       justifyContent: 'space-between',
