@@ -94,10 +94,12 @@ export function TaskScreen({ navigation }) {
   const [newItemModalVisible, setNewItemModalVisible] = React.useState(false);
   const [task, setTask] = React.useState();
   const [date, setDate] = React.useState();
+  const [prio, setPrio] = React.useState();
   const [desc, setDesc] = React.useState();
   let [option, setOption] = React.useState(0);
   const [placeholderTask, setPlaceholderTask] = React.useState("");
   const [placeholderDate, setPlaceholderDate] = React.useState("");
+  const [placeholderPrio, setPlaceholderPrio] = React.useState();
   const [placeholderDesc, setPlaceholderDesc] = React.useState("");
 
   const handleAddTask = () => {
@@ -105,7 +107,7 @@ export function TaskScreen({ navigation }) {
     const new_task = {
       due_date: date,
       task_name: task,
-      priority: 1,
+      priority: prio,
       date_completed: '',
       tags: [],
       description: desc
@@ -113,6 +115,7 @@ export function TaskScreen({ navigation }) {
     setTaskList([...taskList, new_task]);
     setTask(null);
     setDate(null);
+    setPrio(null);
     setDesc(null);
     setModalVisible(false);
   }
@@ -123,11 +126,13 @@ export function TaskScreen({ navigation }) {
     
     li[index].task_name = placeholderTask;
     li[index].due_date = placeholderDate;
+    li[index].priority = placeholderPrio;
     li[index].description = placeholderDesc;
     setTaskList(li);
 
     setPlaceholderTask(null);
     setPlaceholderDate(null);
+    setPlaceholderPrio(null);
     setPlaceholderDesc(null);
     setModalVisible(false);
   }
@@ -142,6 +147,7 @@ export function TaskScreen({ navigation }) {
     setModalVisible(true);
     setPlaceholderTask(taskList[index].task_name);
     setPlaceholderDate(taskList[index].due_date);
+    setPlaceholderPrio(taskList[index].priority);
     setPlaceholderDesc(taskList[index].description);
   }
 
@@ -149,6 +155,7 @@ export function TaskScreen({ navigation }) {
     setModalVisible(true);
     setPlaceholderTask(taskList[index].task_name);
     setPlaceholderDate(taskList[index].due_date);
+    setPlaceholderPrio(taskList[index].priority);
     setPlaceholderDesc(taskList[index].description);
   }
 
@@ -168,7 +175,7 @@ export function TaskScreen({ navigation }) {
     setTaskList(temp);
   }
 
-  const data = [
+  const dateData = [
       {key:'1', value:'Today'},
       {key:'2', value:'Pending'},
       {key:'3', value:'Overdue'},
@@ -176,6 +183,14 @@ export function TaskScreen({ navigation }) {
       {key:'5', value:'Next 7 Days'}, // changed from This Week
       {key:'6', value:'Completed'},
       {key:'7', value:'All'}, // added to include tasks with due date ahead of 8 days from today
+  ]
+
+  const prioData = [
+    {key:'1', value:1},
+    {key:'2', value:2},
+    {key:'3', value:3},
+    {key:'4', value:4},
+    {key:'5', value:5},
   ]
 
     return(
@@ -187,7 +202,7 @@ export function TaskScreen({ navigation }) {
               setSelected={(val) => setSelected(val)} 
               search={false}
               placeholder='Today'
-              data={data} 
+              data={dateData} 
               save="value"
           />
 
@@ -230,7 +245,7 @@ export function TaskScreen({ navigation }) {
         </View>
 
         <TouchableOpacity onPress={() => {setModalVisible(true); setOption(0);}}>
-            <AntDesign style={styles.plus} name="plussquare" size={30} color='#7B1113' />
+            <AntDesign style={styles.plus} name="plussquare" size={30} color='#7B1113'/>
         </TouchableOpacity>
 
         <Modal animationType="slide" 
@@ -249,7 +264,7 @@ export function TaskScreen({ navigation }) {
                     {option === 2 && <TextInput value={placeholderTask}
                                 style={styles.taskName} 
                                 readOnly={true} />}
-                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:100}}>Date Due</Text>
+                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:90}}>Date Due                                  Priority</Text>
                     {option === 0 && <TextInput placeholder="Enter something..."
                                 value={date} style={styles.taskDate}
                                 onChangeText={text => setDate(text)} />}
@@ -259,7 +274,30 @@ export function TaskScreen({ navigation }) {
                     {option === 2 && <TextInput value={placeholderDate}
                                 style={styles.taskDate}
                                 readOnly={true} />}
-                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:190}}>Task Description</Text>
+                    
+                    {option === 0 && <SelectList 
+                                setSelected={(val) => setPrio(val)} 
+                                boxStyles={styles.taskPrio}
+                                dropdownStyles={styles.taskDrop}
+                                dropdownItemStyles={{alignItems: 'center'}}
+                                search={false}
+                                placeholder=' '
+                                data={prioData} />}
+                    {option === 1 && <SelectList 
+                                setSelected={(val) => setPlaceholderPrio(val)} 
+                                boxStyles={styles.taskPrio}
+                                dropdownStyles={styles.taskDrop}
+                                dropdownItemStyles={{alignItems: 'center'}}
+                                search={false}
+                                placeholder={placeholderPrio}
+                                data={prioData} />}
+                    {option === 2 && <TextInput value={placeholderPrio}
+                                style={styles.taskPrioView}
+                                readOnly={true} />}
+
+                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:170}}>Tags</Text>
+
+                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:250}}>Task Description</Text>
                     {option === 0 && <TextInput placeholder="Enter something..." multiline
                                 value={desc} textAlignVertical='top' style={styles.taskDesc} 
                                 onChangeText={desc => setDesc(desc)} />}
@@ -345,6 +383,7 @@ export function TaskScreen({ navigation }) {
     },
     taskName: {
         width: "85%",
+        height: "7.5%",
         position: "absolute",
         borderRadius: 5,
         paddingVertical: 8,
@@ -355,7 +394,8 @@ export function TaskScreen({ navigation }) {
         top:40,
     },
     taskDate: {
-      width: "85%",
+      width: "55%",   
+      height: "7.5%",
       position: "absolute",
       borderRadius: 5,
       paddingVertical: 8,
@@ -363,11 +403,47 @@ export function TaskScreen({ navigation }) {
       borderColor: "rgba(0, 0, 0, 0.2)",
       borderWidth: 1,
       marginBottom: 8,
-      top:130,
+      top:120,
+      left:25,
+    },
+    taskPrio: {
+      width: "22.5%",
+      position: "absolute",
+      borderRadius: 5,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderColor: "rgba(0, 0, 0, 0.2)",
+      borderWidth: 1,
+      marginBottom: 8,
+      top:-130,
+      left:60,
+    },
+    taskPrioView: {
+      width: "22.5%",   
+      height: "7.5%",
+      position: "absolute",
+      borderRadius: 5,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderColor: "rgba(0, 0, 0, 0.2)",
+      borderWidth: 1,
+      marginBottom: 8,
+      top:120,
+      left:215,
   },
+    taskDrop: {
+      backgroundColor: "white",
+      borderColor: "rgba(0, 0, 0, 0.2)",
+      position: "absolute",
+      top:-140,
+      left:135,
+      width: "17.5%",
+      zIndex: 999,
+      elevation: 999,
+    },
     taskDesc: {
         width: "85%",
-        height: "42.5%",
+        height: "30%",
         position: "absolute",
         borderRadius: 5,
         paddingVertical: 8,
@@ -375,7 +451,7 @@ export function TaskScreen({ navigation }) {
         borderColor: "rgba(0, 0, 0, 0.2)",
         borderWidth: 1,
         marginBottom: 8,
-        top:220,
+        top:280,
     },
     container: {
       flexDirection: 'row',
