@@ -74,7 +74,7 @@ export function HomeScreen ({ navigation }) {
           <FontAwesome name="smile-o" size={24} color="#3C78AF" />
           <Text className="ml-1 mr-4 text-white text-lg">{stats.EN.value}</Text>
         </View>
-        {/* <GLView className="mt-16" style={{width: width, height: width}} onContextCreate={(gl) => _onContextCreate(gl)}/> */}
+        <GLView className="mt-16" style={{width: width, height: width}} onContextCreate={(gl) => _onContextCreate(gl)}/>
         </>
         }
         

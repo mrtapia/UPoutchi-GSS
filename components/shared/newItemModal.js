@@ -2,12 +2,40 @@ import React, { useEffect, useContext, useState } from 'react';
 import { View, Text, Pressable, Modal, Image, ActivityIndicator } from 'react-native';
 import { useAssets } from 'expo-asset';
 import { Items, getCategories } from '../../lib/Items';
+import { Entypo } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 import Chooser from 'random-seed-weighted-chooser';
 import { db } from '../../lib/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { UserAuth, UserInfoContext } from '../../contexts/AuthContext';
 
-const CATEGORIES = getCategories();
+const CATEGORIES = {
+    DEFAULT: {
+        bgColor: "bg-gray-300",
+        borderColor: "border-gray-800"
+    },
+    EN: {
+        bgColor: "bg-yellow-300",
+        borderColor: "border-yellow-800",
+        icon: <FontAwesome name="smile-o" size={16} color="white" />
+    },
+    HE: {
+        bgColor: "bg-red-300",
+        borderColor: "border-red-800",
+        icon: <Entypo name="heart" size={16} color="white" />
+    },
+    HU: {
+        bgColor: "bg-green-300",
+        borderColor: "border-green-800",
+        icon: <Ionicons name="fast-food" size={16} color="white" />
+    },
+    HY: {
+        bgColor: "bg-blue-300",
+        borderColor: "border-blue-800",
+        icon: <FontAwesome name="bathtub" size={16} color="white" />
+    },
+};
 
 export function NewItemModal({visible, setVisible, action}) {
     const { user } = UserAuth();

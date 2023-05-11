@@ -6,15 +6,20 @@ import {
 } from "react-native-countdown-circle-timer";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "react-native/Libraries/NewAppScreen";
+import { NewItemModal } from "../../components/shared/newItemModal";
 
 export function FocusScreen({ navigation }) {
 	const [isPaused, setIsPaused] = React.useState(true);
+	const [isStart, setIsStart] = React.useState(true);
+	const [newItemModalVisible, setNewItemModalVisible] = React.useState(false);
 	const togglePause = () => {
+		if (isStart) setIsStart(false);
 		setIsPaused(!isPaused);
 	};
 	const [key, setKey] = React.useState(0);
 	const children = ({ remainingTime }) => {
 		if (remainingTime === 0) {
+			setNewItemModalVisible(true);
 			return `Time's up!`;
 		}
 		const minutes = Math.floor(remainingTime / 60);
@@ -25,12 +30,14 @@ export function FocusScreen({ navigation }) {
 	};
 
 	return (
+		<>
+		<NewItemModal visible={newItemModalVisible} setVisible={setNewItemModalVisible} action={"SESSION"}/>
 		<View style={styles.container}>
 			<CountdownCircleTimer
 				key={key}
 				size={280}
 				strokeWidth={20}
-				duration={10}
+				duration={1500}
 				colors={["#439cfb", "#E5203E", "#FFFFFF"]}
 				colorsTime={[10, 0.0001, 0]}
 				isPlaying={!isPaused}
@@ -55,19 +62,37 @@ export function FocusScreen({ navigation }) {
 					/>
 				</View>
 				<View style={styles.btnContainer}>
+					<Ionicons 
+					name="stop" 
+					title="Stop" 
+					disabled={isStart}
+					onPress={() => {
+						setNewItemModalVisible(true);
+						setIsPaused(true);
+						setIsStart(true);
+						setKey((prevKey) => prevKey + 1);
+					}}
+					size={80} 
+					color={isStart ? "#111010" : "#E5203E"} />
+					
+				</View>
+				<View style={styles.btnContainer}>
 					<Ionicons
 						name="md-reload-circle"
 						title="Restart"
 						onPress={() => {
 							setKey((prevKey) => prevKey + 1);
 							setIsPaused(true);
+							setIsStart(true);
 						}}
 						size={80}
 						color={"#111010"}
 					/>
 				</View>
+				
 			</View>
 		</View>
+		</>
 	);
 }
 
