@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { StyleSheet, View, Pressable, Text, Image, 
   TouchableOpacity, Keyboard, ScrollView, Modal, 
-  TextInput, Button, Dimensions, LogBox } from 'react-native';
+  TextInput, Button, Dimensions, LogBox, Alert } from 'react-native';
 import Checkbox from 'expo-checkbox';
 import { SelectList } from 'react-native-dropdown-select-list';
 import { AntDesign, MaterialIcons } from '@expo/vector-icons';
@@ -101,6 +101,37 @@ export function TaskScreen({ navigation }) {
   const [placeholderDate, setPlaceholderDate] = React.useState("");
   const [placeholderPrio, setPlaceholderPrio] = React.useState();
   const [placeholderDesc, setPlaceholderDesc] = React.useState("");
+  //
+  const [visible, setVisible] = React.useState(false);
+  const [isConfirmed, setConfirmation] = React.useState(false);
+  const showConfirmDialog = (index) => {
+    return Alert.alert(
+      "Delete Task",
+      "Are you sure you want to delete this task?",
+      [
+        // The "No" button
+        // Does nothing but dismiss the dialog when tapped
+        {
+          text: "No",
+          onPress: () => {
+            setVisible(false);
+          },
+        },
+
+        // The "Yes" button
+        {
+          text: "Yes",
+          onPress: () => {
+            setVisible(false);
+            deleteTask(index);
+          },
+        },
+      ],
+      {
+        cancelable: false,
+      },
+    );
+  };
 
   const handleAddTask = () => {
     Keyboard.dismiss();
@@ -230,7 +261,7 @@ export function TaskScreen({ navigation }) {
                     <TouchableOpacity key={3*index + 1} onPress={() => {editTask(index); setOption(1); makeGlobal(index);}}>
                         <AntDesign name="edit" size={22} color='#fff' />
                     </TouchableOpacity> 
-                    <TouchableOpacity key={3*index + 2} onPress={() => deleteTask(index)}>
+                    <TouchableOpacity key={3*index + 2} onPress={() => showConfirmDialog(index)}>
                         <MaterialIcons  name="delete" size={22} color='#fff' />
                     </TouchableOpacity>
                     </View>
