@@ -99,9 +99,9 @@ export function TaskScreen({ navigation }) {
   let [option, setOption] = React.useState(0);
   const [placeholderTask, setPlaceholderTask] = React.useState("");
   const [placeholderDate, setPlaceholderDate] = React.useState("");
-  const [placeholderPrio, setPlaceholderPrio] = React.useState();
+  const [placeholderPrio, setPlaceholderPrio] = React.useState(Number);
   const [placeholderDesc, setPlaceholderDesc] = React.useState("");
-  //
+
   const [visible, setVisible] = React.useState(false);
   const [isConfirmed, setConfirmation] = React.useState(false);
   const showConfirmDialog = (index) => {
@@ -322,7 +322,7 @@ export function TaskScreen({ navigation }) {
                                 search={false}
                                 placeholder={placeholderPrio}
                                 data={prioData} />}
-                    {option === 2 && <TextInput value={placeholderPrio}
+                    {option === 2 && <TextInput value={placeholderPrio.toString()}
                                 style={styles.taskPrioView}
                                 readOnly={true} />}
 
