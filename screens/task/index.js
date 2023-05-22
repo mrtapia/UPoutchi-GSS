@@ -1,11 +1,32 @@
-import * as React from 'react';
-import { StyleSheet, View, Pressable, Text, Image, 
-  TouchableOpacity, Keyboard, ScrollView, Modal, 
-  TextInput, Button, Dimensions, LogBox, Alert } from 'react-native';
-import Checkbox from 'expo-checkbox';
-import { SelectList } from 'react-native-dropdown-select-list';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
-import { NewItemModal } from '../../components/shared/newItemModal';
+import * as React from "react";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  Text,
+  Image,
+  TouchableOpacity,
+  Keyboard,
+  ScrollView,
+  Modal,
+  TextInput,
+  Button,
+  Dimensions,
+  LogBox,
+  Alert,
+} from "react-native";
+import Checkbox from "expo-checkbox";
+import { SelectList } from "react-native-dropdown-select-list";
+import { AntDesign, MaterialIcons, Entypo } from "@expo/vector-icons";
+import { NewItemModal } from "../../components/shared/newItemModal";
+import ReactChipsInput from "react-native-chips";
+import { Chips } from "../../components/chips";
+import { UserAuth } from "../../contexts/AuthContext";
+import { UserInfoContext } from "../../contexts/AuthContext";
+
+import { collection, addDoc, setDoc, doc, deleteDoc, Timestamp } from "firebase/firestore";
+import { db } from "../../lib/firebase";
+import moment from "moment";
 
 const { width } = Dimensions.get("window");
 
@@ -26,84 +47,89 @@ Priority levels: [1,5] ?
 
 const dummy_data = [
   {
-    due_date: '5/2/2023, 11:30:00 AM', // overdue, pending, all
+    due_date: "5/2/2023, 11:30:00 AM", // overdue, pending, all
     // code for this date format: const date = new Date().toLocaleString();
-    task_name: 'Exercise',
+    task_name: "Exercise",
     priority: 1,
-    date_completed: '', // blank means not yet completed
-    tags: [
-      "CS180", "Exercise"
-    ],
-    description: 'Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.'
+    date_completed: "", // blank means not yet completed
+    tags: ["CS180", "Exercise"],
+    description:
+      "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.",
   },
   {
-    due_date: '5/4/2023, 11:30:00 AM',  //today's, pending, all
-    task_name: 'Exersfsfcise',
+    due_date: "5/4/2023, 11:30:00 AM", //today's, pending, all
+    task_name: "Exersfsfcise",
     priority: 5,
-    date_completed: '',
-    tags: [
-      "CS180"
-    ],
-    description: 'adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.'
+    date_completed: "",
+    tags: ["CS180"],
+    description:
+      "adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.",
   },
   {
-    due_date: '5/1/2023, 11:30:00 AM',  //completed
-    task_name: 'aadfaewr',
+    due_date: "5/1/2023, 11:30:00 AM", //completed
+    task_name: "aadfaewr",
     priority: 3,
-    date_completed: '5/1/2023 11:30:00 AM',
-    tags: [
-      "CS180"
-    ],
-    description: 'adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.'
+    date_completed: "5/1/2023 11:30:00 AM",
+    tags: ["CS180"],
+    description:
+      "adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.",
   },
   {
-    due_date: '5/5/2023, 11:30:00 AM',  //tomorrow, all
-    task_name: 'sswfewr',
+    due_date: "5/5/2023, 11:30:00 AM", //tomorrow, all
+    task_name: "sswfewr",
     priority: 4,
-    date_completed: '',
-    tags: [
-      "CS180"
-    ],
-    description: 'adasdasdNeqqui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.'
+    date_completed: "",
+    tags: ["CS180"],
+    description:
+      "adasdasdNeqqui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.",
   },
   {
-    due_date: '5/8/2023, 11:30:00 AM', //next 7 days, all
-    task_name: 'Exersfsfcise',
+    due_date: "5/8/2023, 11:30:00 AM", //next 7 days, all
+    task_name: "Exersfsfcise",
     priority: 3,
-    date_completed: '',
-    tags: [
-      "CS180"
-    ],
-    description: 'adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.'
-  },{
-    due_date: '5/20/2023, 11:30:00 AM', // all
-    task_name: 'sfsfz',
+    date_completed: "",
+    tags: ["CS180"],
+    description:
+      "adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.",
+  },
+  {
+    due_date: "5/20/2023, 11:30:00 AM", // all
+    task_name: "sfsfz",
     priority: 2,
-    date_completed: '',
-    tags: [
-      
-    ],
-    description: 'adasdaum quia dolor sit amet, consectetur, adipisci velit.'
+    date_completed: "",
+    tags: [],
+    description: "adasdaum quia dolor sit amet, consectetur, adipisci velit.",
   },
 ];
 
 export function TaskScreen({ navigation }) {
-  const [taskList, setTaskList] = React.useState(dummy_data);
+  const [taskList, setTaskList] = React.useState([]);
   const [selected, setSelected] = React.useState("");
   const [isModalVisible, setModalVisible] = React.useState(false);
   const [newItemModalVisible, setNewItemModalVisible] = React.useState(false);
-  const [task, setTask] = React.useState();
-  const [date, setDate] = React.useState();
-  const [prio, setPrio] = React.useState();
-  const [desc, setDesc] = React.useState();
+  const [task, setTask] = React.useState("");
+  const [date, setDate] = React.useState("");
+  const [prio, setPrio] = React.useState("");
+  const [desc, setDesc] = React.useState("");
+  const [tags, setTags] = React.useState([]);
   let [option, setOption] = React.useState(0);
   const [placeholderTask, setPlaceholderTask] = React.useState("");
   const [placeholderDate, setPlaceholderDate] = React.useState("");
   const [placeholderPrio, setPlaceholderPrio] = React.useState(Number);
+  const [placeholderTags, setPlaceholderTags] = React.useState([]);
+  const [placeholderDocId, setPlaceholderDocId] = React.useState("");
   const [placeholderDesc, setPlaceholderDesc] = React.useState("");
 
   const [visible, setVisible] = React.useState(false);
   const [isConfirmed, setConfirmation] = React.useState(false);
+
+  const { user } = UserAuth();
+  const { tasks, setTasks } = React.useContext(UserInfoContext);
+
+  React.useEffect(() => {
+    if (tasks.length !== 0) setTaskList(tasks);
+  }, [tasks]);
+
   const showConfirmDialog = (index) => {
     return Alert.alert(
       "Delete Task",
@@ -129,380 +155,590 @@ export function TaskScreen({ navigation }) {
       ],
       {
         cancelable: false,
-      },
+      }
     );
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     Keyboard.dismiss();
     const new_task = {
       due_date: date,
       task_name: task,
       priority: prio,
-      date_completed: '',
-      tags: [],
-      description: desc
+      date_completed: "",
+      tags: tags,
+      description: desc,
     };
-    setTaskList([...taskList, new_task]);
-    setTask(null);
-    setDate(null);
-    setPrio(null);
-    setDesc(null);
-    setModalVisible(false);
-  }
 
-  const handleUpdatedTask = (index) => {
+    const docRef = await addDoc(
+      collection(db, "users", user.uid, "tasks"),
+      new_task
+    );
+    new_task.id = docRef.id;
+    let li = [...tasks, new_task];
+    li.sort((a, b) => {
+      const d1 = moment(a.due_date, "M/D/YYYY, h:mm:ss A", true);
+      const d2 = moment(b.due_date, "M/D/YYYY, h:mm:ss A", true);
+      return d1 - d2;
+    });
+    setTasks(li);
+    setTaskList(li);
+    setTask("");
+    setDate("");
+    setPrio("");
+    setTags([]);
+    setDesc("");
+    setModalVisible(false);
+  };
+
+  const handleUpdatedTask = async (index) => {
     Keyboard.dismiss();
     let li = [...taskList];
-    
+
     li[index].task_name = placeholderTask;
     li[index].due_date = placeholderDate;
     li[index].priority = placeholderPrio;
+    li[index].tags = placeholderTags;
     li[index].description = placeholderDesc;
-    setTaskList(li);
 
-    setPlaceholderTask(null);
-    setPlaceholderDate(null);
-    setPlaceholderPrio(null);
-    setPlaceholderDesc(null);
+    try {
+      await setDoc(doc(db, "users", user.uid, "tasks", placeholderDocId), {
+        task_name: placeholderTask,
+        due_date: placeholderDate,
+        priority: placeholderPrio,
+        tags: placeholderTags,
+        description: placeholderDesc,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+
+    setTaskList(li);
+    setTasks(li);
+
+    setPlaceholderTask("");
+    setPlaceholderDate("");
+    setPlaceholderPrio("");
+    setPlaceholderTags([]);
+    setPlaceholderDesc("");
     setModalVisible(false);
-  }
-  
-  const deleteTask = (index) => {
+  };
+
+  const deleteTask = async (index) => {
+    await deleteDoc(doc(db, "users", user.uid, "tasks", taskList[index].id));
     let tasksCopy = [...taskList];
     tasksCopy.splice(index, 1);
     setTaskList(tasksCopy);
-  }
+    setTasks(tasksCopy);
+  };
 
   const editTask = (index) => {
     setModalVisible(true);
     setPlaceholderTask(taskList[index].task_name);
     setPlaceholderDate(taskList[index].due_date);
     setPlaceholderPrio(taskList[index].priority);
+    setPlaceholderTags(taskList[index].tags);
+    setPlaceholderDocId(taskList[index].id);
     setPlaceholderDesc(taskList[index].description);
-  }
+  };
 
   const checkTask = (index) => {
     setModalVisible(true);
     setPlaceholderTask(taskList[index].task_name);
     setPlaceholderDate(taskList[index].due_date);
     setPlaceholderPrio(taskList[index].priority);
+    setPlaceholderTags(taskList[index].tags);
     setPlaceholderDesc(taskList[index].description);
-  }
+  };
 
   const makeGlobal = (index) => {
     global.index = index;
-  }
+  };
 
-  const onCheck = (index) => {
+  const onCheck = async (index) => {
     const temp = [...taskList];
     if (temp[index].date_completed == "") {
-      const datenow = new Date().toLocaleString();
+      const datenow = Timestamp.now()
+      await setDoc(doc(db, "users", user.uid, "tasks", temp[index].id), {
+        date_completed: datenow
+      }, {merge: true});
       temp[index].date_completed = datenow;
       setNewItemModalVisible(true);
     } else {
+      await setDoc(doc(db, "users", user.uid, "tasks", temp[index].id), {
+        date_completed: ""
+      }, {merge: true});
       temp[index].date_completed = "";
     }
     setTaskList(temp);
-  }
+  };
 
   const dateData = [
-      {key:'1', value:'Today'},
-      {key:'2', value:'Pending'},
-      {key:'3', value:'Overdue'},
-      {key:'4', value:'Tomorrow'},
-      {key:'5', value:'Next 7 Days'}, // changed from This Week
-      {key:'6', value:'Completed'},
-      {key:'7', value:'All'}, // added to include tasks with due date ahead of 8 days from today
-  ]
+    { key: "1", value: "Today" },
+    { key: "2", value: "Pending" },
+    { key: "3", value: "Overdue" },
+    { key: "4", value: "Tomorrow" },
+    { key: "5", value: "Next 7 Days" }, // changed from This Week
+    { key: "6", value: "Completed" },
+    { key: "7", value: "All" }, // added to include tasks with due date ahead of 8 days from today
+  ];
 
   const prioData = [
-    {key:'1', value:1},
-    {key:'2', value:2},
-    {key:'3', value:3},
-    {key:'4', value:4},
-    {key:'5', value:5},
-  ]
+    { key: "1", value: 1 },
+    { key: "2", value: 2 },
+    { key: "3", value: 3 },
+    { key: "4", value: 4 },
+    { key: "5", value: 5 },
+  ];
 
-    return(
-      <>
-      <NewItemModal visible={newItemModalVisible} setVisible={setNewItemModalVisible} action={"TASK"}/>
-      <View style = {{paddingHorizontal:10, paddingVertical:15, flex:1}}>
-    
-        <SelectList 
-              setSelected={(val) => setSelected(val)} 
-              search={false}
-              placeholder='Today'
-              data={dateData} 
-              save="value"
-          />
+  return (
+    <>
+      <NewItemModal
+        visible={newItemModalVisible}
+        setVisible={setNewItemModalVisible}
+        action={"TASK"}
+      />
+      <View style={{ paddingHorizontal: 10, paddingVertical: 15, flex: 1 }} className="bg-[#232528]">
+        <SelectList
+          setSelected={(val) => setSelected(val)}
+          search={false}
+          placeholder="Today"
+          data={dateData}
+          save="value"
+          boxStyles={{backgroundColor: "#EE7A77", borderColor: "#EE7A77"}}
+          inputStyles={{color: "white", fontWeight: 'bold', fontSize:18}}
+          dropdownStyles={{backgroundColor: "#0f0f0f"}}
+          dropdownItemStyles={{backgroundColor: "#0f0f0f"}}
+          dropdownTextStyles={{backgroundColor: "#0f0f0f", color: "white"}}
+        />
 
-        <View style = {{paddingBottom:35, flex:1}}>
-        <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps='handled'>
-
-        {
-            taskList.map((item, index) => {
+        <View style={{ paddingBottom: 35, flex: 1 }}>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {taskList.map((item, index) => {
               const isChecked = item.date_completed == "" ? false : true;
               return (
                 <View style={styles.container} key={index}>
-                <View className={isChecked ? "bg-[#591b1c]" : `bg-[#7B1113]`} style={styles.taskContainer}>
-                  <View className="flex flex-row">
-                    <Checkbox className="mr-2 border-white"
-                      color={"transparent"}
-                      value={isChecked}
-                      onValueChange={() => onCheck(index)}
-                    /> 
-                    <Text className={`text-white text-base ${isChecked ? "line-through" : ""}`}>{item.task_name}</Text>
-                  </View>
-                    <View className="flex flex-row gap-2">
-                    <TouchableOpacity key={3*index} onPress={() => {checkTask(index); setOption(2); makeGlobal(index);}}>
-                        <AntDesign  name="eyeo" size={22} color='#fff' />
-                    </TouchableOpacity>
-                    <TouchableOpacity key={3*index + 1} onPress={() => {editTask(index); setOption(1); makeGlobal(index);}}>
-                        <AntDesign name="edit" size={22} color='#fff' />
-                    </TouchableOpacity> 
-                    <TouchableOpacity key={3*index + 2} onPress={() => showConfirmDialog(index)}>
-                        <MaterialIcons  name="delete" size={22} color='#fff' />
-                    </TouchableOpacity>
+                  <View
+                    className={isChecked ? "bg-[#20517f]" : `bg-[#3C78AF]`}
+                    style={styles.taskContainer}
+                  >
+                    <View className="flex flex-row">
+                      <Checkbox
+                        className="mr-2 border-white"
+                        color={"transparent"}
+                        value={isChecked}
+                        onValueChange={() => onCheck(index)}
+                      />
+                      <Text
+                        className={`text-white text-base ${
+                          isChecked ? "line-through" : ""
+                        }`}
+                      >
+                        {item.task_name}
+                      </Text>
                     </View>
-                    
+                    <View className="flex flex-row gap-2">
+                      <TouchableOpacity
+                        key={3 * index}
+                        onPress={() => {
+                          checkTask(index);
+                          setOption(2);
+                          makeGlobal(index);
+                        }}
+                      >
+                        <AntDesign name="eyeo" size={22} color="#fff" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        key={3 * index + 1}
+                        onPress={() => {
+                          editTask(index);
+                          setOption(1);
+                          makeGlobal(index);
+                        }}
+                      >
+                        <AntDesign name="edit" size={22} color="#fff" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        key={3 * index + 2}
+                        onPress={() => showConfirmDialog(index)}
+                      >
+                        <MaterialIcons name="delete" size={22} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 </View>
-                </View>
-              )
-            })
-          }
-
-        </ScrollView>
+              );
+            })}
+          </ScrollView>
         </View>
 
-        <TouchableOpacity onPress={() => {setModalVisible(true); setOption(0);}}>
-            <AntDesign style={styles.plus} name="plussquare" size={30} color='#7B1113'/>
+        <TouchableOpacity
+          onPress={() => {
+            setModalVisible(true);
+            setOption(0);
+          }}
+        >
+          <AntDesign
+            style={styles.plus}
+            name="plussquare"
+            size={40}
+            color="#3C78AF"
+          />
         </TouchableOpacity>
 
-        <Modal animationType="slide" 
-                   transparent visible={isModalVisible} 
-                   presentationStyle="overFullScreen" 
-                   onDismiss={() => setModalVisible(false)}>
-            <View style={styles.viewWrapper}>
-                <View style={styles.modalView}>
-                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:10}}>Task Name</Text>
-                    {option === 0 && <TextInput placeholder="Enter something..."
-                                value={task} style={styles.taskName} 
-                                onChangeText={text => setTask(text)} />}
-                    {option === 1 && <TextInput value={placeholderTask}
-                                style={styles.taskName} 
-                                onChangeText={text => setPlaceholderTask(text)} />}
-                    {option === 2 && <TextInput value={placeholderTask}
-                                style={styles.taskName} 
-                                readOnly={true} />}
-                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:90}}>Date Due                                  Priority</Text>
-                    {option === 0 && <TextInput placeholder="Enter something..."
-                                value={date} style={styles.taskDate}
-                                onChangeText={text => setDate(text)} />}
-                    {option === 1 && <TextInput value={placeholderDate} 
-                                style={styles.taskDate}
-                                onChangeText={text => setPlaceholderDate(text)} />}
-                    {option === 2 && <TextInput value={placeholderDate}
-                                style={styles.taskDate}
-                                readOnly={true} />}
-                    
-                    {option === 0 && <SelectList 
-                                setSelected={(val) => setPrio(val)} 
-                                boxStyles={styles.taskPrio}
-                                dropdownStyles={styles.taskDrop}
-                                dropdownItemStyles={{alignItems: 'center'}}
-                                search={false}
-                                placeholder=' '
-                                data={prioData} />}
-                    {option === 1 && <SelectList 
-                                setSelected={(val) => setPlaceholderPrio(val)} 
-                                boxStyles={styles.taskPrio}
-                                dropdownStyles={styles.taskDrop}
-                                dropdownItemStyles={{alignItems: 'center'}}
-                                search={false}
-                                placeholder={placeholderPrio}
-                                data={prioData} />}
-                    {option === 2 && <TextInput value={placeholderPrio.toString()}
-                                style={styles.taskPrioView}
-                                readOnly={true} />}
-
-                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:170}}>Tags</Text>
-
-                    <Text style={{width: '90%', fontSize: 16, position:'absolute', top:250}}>Task Description</Text>
-                    {option === 0 && <TextInput placeholder="Enter something..." multiline
-                                value={desc} textAlignVertical='top' style={styles.taskDesc} 
-                                onChangeText={desc => setDesc(desc)} />}
-                    {option === 1 && <TextInput value={placeholderDesc} multiline
-                                textAlignVertical='top' style={styles.taskDesc} 
-                                onChangeText={desc => setPlaceholderDesc(desc)} />}
-                    {option === 2 && <TextInput value={placeholderDesc} multiline
-                                textAlignVertical='top' style={styles.taskDesc} 
-                                readOnly={true} />}                                
-                    <View style={{flexDirection: 'row', position: 'absolute', bottom: 15}}>
-                    <Button title="Close" onPress={() => setModalVisible(false)} color='#7B1113'/>
-                    <View style={{width: 150}} />
-                    {option === 0 && <Button title="Add Task" onPress={() => { handleAddTask(); }} color='#7B1113' />}
-                    {option === 1 && <Button title="Edit Task" onPress={() => { handleUpdatedTask(global.index); }} color='#7B1113' />}
+        <Modal
+          animationType="slide"
+          transparent
+          visible={isModalVisible}
+          presentationStyle="overFullScreen"
+          onDismiss={() => setModalVisible(false)}
+        >
+          <View className="flex-1 justify-center items-center bg-[#000000bb]">
+            <View className="flex h-3/5 w-5/6 bg-[#232528] p-4 rounded">
+              <View className="flex flex-grow">
+                <ScrollView
+                  contentContainerStyle={{ flexGrow: 1 }}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  <Text className="text-[16px] my-2 text-white">Task Name</Text>
+                  {option === 0 && (
+                    <TextInput
+                      placeholder="Enter something..."
+                      value={task}
+                      className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                      placeholderTextColor={"#ffffffaa"}
+                      onChangeText={(text) => setTask(text)}
+                    />
+                  )}
+                  {option === 1 && (
+                    <TextInput
+                      value={placeholderTask}
+                      className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                      onChangeText={(text) => setPlaceholderTask(text)}
+                    />
+                  )}
+                  {option === 2 && (
+                    <TextInput
+                      value={placeholderTask}
+                      className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                      readOnly={true}
+                    />
+                  )}
+                  <View className="flex flex-row justify-between">
+                    <View className="flex w-3/4">
+                      <Text className="text-[16px] my-2 text-white">Date Due</Text>
+                      {option === 0 && (
+                        <TextInput
+                          placeholder="Enter something..."
+                          value={date}
+                          className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                          placeholderTextColor={"#ffffffaa"}
+                          onChangeText={(text) => setDate(text)}
+                        />
+                      )}
+                      {option === 1 && (
+                        <TextInput
+                          value={placeholderDate}
+                          className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                          onChangeText={(text) => setPlaceholderDate(text)}
+                        />
+                      )}
+                      {option === 2 && (
+                        <TextInput
+                          value={placeholderDate}
+                          className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                          readOnly={true}
+                        />
+                      )}
                     </View>
-                </View>
+                    <View className="flex w-1/5">
+                      <Text className="text-[16px] my-2 text-white">Priority</Text>
+                      <View className="z-50">
+                        {option === 0 && (
+                          <SelectList
+                            defaultOption={{ key: "1", value: 1 }}
+                            setSelected={(val) => setPrio(val)}
+                            boxStyles={styles.taskPrio}
+                            inputStyles={{color: "white"}}
+                            dropdownStyles={styles.taskDrop}
+                            dropdownTextStyles={{color: "white"}}
+                            arrowicon={<Entypo name="chevron-down" size={12} color="white" />}
+                            search={false}
+                            data={prioData}
+                          />
+                        )}
+                        {option === 1 && (
+                          <SelectList
+                            setSelected={(val) => setPlaceholderPrio(val)}
+                            boxStyles={styles.taskPrio}
+                            inputStyles={{color: "white"}}
+                            dropdownStyles={styles.taskDrop}
+                            dropdownTextStyles={{color: "white"}}
+                            arrowicon={<Entypo name="chevron-down" size={12} color="white" />}
+                            search={false}
+                            placeholder={placeholderPrio}
+                            data={prioData}
+                          />
+                        )}
+                        {option === 2 && (
+                          <TextInput
+                            value={placeholderPrio}
+                            className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                            readOnly={true}
+                          />
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                  <Text className="text-[16px] my-2 text-white">Tags</Text>
+
+                  {(option === 0 || option === 1) && (
+                    <View className="-pt-[18px] -mt-[36px] -z-10">
+                      <ReactChipsInput
+                        label=" "
+                        initialChips={option == 0 ? tags : placeholderTags}
+                        onChangeChips={(chips) =>
+                          option == 0
+                            ? setTags(chips)
+                            : setPlaceholderTags(chips)
+                        }
+                        chipStyle={{ backgroundColor: "#ffffff55" }}
+                        inputStyle={{
+                          fontSize: 16,
+                          borderColor: "#ffffff55",
+                          borderRadius: 5,
+                          borderWidth: 1,
+                          marginBottom: 4,
+                          color: "white !important",
+                        }}
+                        labelStyle={{ display: "none" }}
+                        labelOnBlur={{ display: "none" }}
+                      />
+                    </View>
+                  )}
+                  {option === 2 && placeholderTags && (
+                    <View className="flex flex-row flex-wrap">
+                      {placeholderTags.map((item, index) => {
+                        return <Chips value={item} key={index} />;
+                      })}
+                    </View>
+                  )}
+
+                  <Text className="text-[16px] my-2 text-white">Task Description</Text>
+                  {option === 0 && (
+                    <TextInput
+                      placeholder="Enter something..."
+                      multiline
+                      value={desc}
+                      textAlignVertical="top"
+                      className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"
+                      placeholderTextColor={"#ffffffaa"}
+                      onChangeText={(desc) => setDesc(desc)}
+                    />
+                  )}
+                  {option === 1 && (
+                    <TextInput
+                      value={placeholderDesc}
+                      multiline
+                      textAlignVertical="top"
+                      className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"
+                      placeholderTextColor={"#ffffffaa"}
+                      onChangeText={(desc) => setPlaceholderDesc(desc)}
+                    />
+                  )}
+                  {option === 2 && (
+                    <TextInput
+                      value={placeholderDesc}
+                      multiline
+                      textAlignVertical="top"
+                      className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"
+                      placeholderTextColor={"#ffffffaa"}
+                      readOnly={true}
+                    />
+                  )}
+                </ScrollView>
+              </View>
+              <View className="flex flex-row justify-between">
+                <Button
+                  title="Close"
+                  onPress={() => setModalVisible(false)}
+                  color="#3C78AF"
+                />
+                <View style={{ width: 150 }} />
+                {option === 0 && (
+                  <Button
+                    title="Add Task"
+                    onPress={() => {
+                      handleAddTask();
+                    }}
+                    color="#3C78AF"
+                  />
+                )}
+                {option === 1 && (
+                  <Button
+                    title="Edit Task"
+                    onPress={() => {
+                      handleUpdatedTask(global.index);
+                    }}
+                    color="#3C78AF"
+                  />
+                )}
+              </View>
             </View>
+          </View>
         </Modal>
-
       </View>
-      </>
-      
-    );
-  }
+    </>
+  );
+}
 
-  const styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-    },
-    index: {
-        color: '#fff',
-        fontSize: 20,
-    },
-    taskContainer: {
-        borderRadius: 12,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flex: 1,
-        paddingHorizontal: 20,
-        paddingVertical: 5,
-        minHeight: 50,
-        marginTop: 20,
-    },
-    task: {
-        color: '#fff',
-        width: '90%',
-        fontSize: 16,
-    },
-    check: {
-      marginLeft: -50,
-    },
-    edit: {
-      marginLeft: -25,
-    },
-    delete: {
-        marginLeft: 0,
-    },
-    plus: {
-        position: "absolute", 
-        bottom: -5,
-        right: 0
-    },
-    viewWrapper: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "rgba(0, 0, 0, 0.2)",
-    },
-    modalView: {
-        alignItems: "center",
-        justifyContent: "center",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        elevation: 5,
-        transform: [{ translateX: -(width * 0.4) }, 
-                    { translateY: -250 }],
-        height: 500,
-        width: width * 0.8,
-        backgroundColor: "#fff",
-        borderRadius: 7,
-    },
-    taskName: {
-        width: "85%",
-        height: "7.5%",
-        position: "absolute",
-        borderRadius: 5,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderColor: "rgba(0, 0, 0, 0.2)",
-        borderWidth: 1,
-        marginBottom: 8,
-        top:40,
-    },
-    taskDate: {
-      width: "55%",   
-      height: "7.5%",
-      position: "absolute",
-      borderRadius: 5,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderColor: "rgba(0, 0, 0, 0.2)",
-      borderWidth: 1,
-      marginBottom: 8,
-      top:120,
-      left:25,
-    },
-    taskPrio: {
-      width: "22.5%",
-      position: "absolute",
-      borderRadius: 5,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderColor: "rgba(0, 0, 0, 0.2)",
-      borderWidth: 1,
-      marginBottom: 8,
-      top:-130,
-      left:60,
-    },
-    taskPrioView: {
-      width: "22.5%",   
-      height: "7.5%",
-      position: "absolute",
-      borderRadius: 5,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderColor: "rgba(0, 0, 0, 0.2)",
-      borderWidth: 1,
-      marginBottom: 8,
-      top:120,
-      left:215,
-  },
-    taskDrop: {
-      backgroundColor: "white",
-      borderColor: "rgba(0, 0, 0, 0.2)",
-      position: "absolute",
-      top:-140,
-      left:135,
-      width: "17.5%",
-      zIndex: 999,
-      elevation: 999,
-    },
-    taskDesc: {
-        width: "85%",
-        height: "30%",
-        position: "absolute",
-        borderRadius: 5,
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderColor: "rgba(0, 0, 0, 0.2)",
-        borderWidth: 1,
-        marginBottom: 8,
-        top:280,
-    },
-    container: {
-      flexDirection: 'row',
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
   },
   index: {
-      color: '#fff',
-      fontSize: 20,
+    color: "#fff",
+    fontSize: 20,
   },
   taskContainer: {
-      borderRadius: 12,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      flex: 1,
-      paddingHorizontal: 20,
-      paddingVertical: 5,
-      minHeight: 50,
-      marginTop: 20,
+    borderRadius: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 5,
+    minHeight: 50,
+    marginTop: 20,
+  },
+  task: {
+    color: "#fff",
+    width: "90%",
+    fontSize: 16,
+  },
+  check: {
+    marginLeft: -50,
+  },
+  edit: {
+    marginLeft: -25,
+  },
+  delete: {
+    marginLeft: 0,
+  },
+  plus: {
+    position: "absolute",
+    bottom: -5,
+    right: 0,
+  },
+  viewWrapper: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+  },
+  modalView: {
+    alignItems: "center",
+    justifyContent: "center",
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    elevation: 5,
+    transform: [{ translateX: -(width * 0.4) }, { translateY: -250 }],
+    height: 500,
+    width: width * 0.8,
+    backgroundColor: "#fff",
+    borderRadius: 7,
+  },
+  taskName: {
+    width: "85%",
+    height: "7.5%",
+    position: "absolute",
+    borderRadius: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderColor: "rgba(0, 0, 0, 0.2)",
+    borderWidth: 1,
+    marginBottom: 8,
+    top: 40,
+  },
+  taskDate: {
+    width: "55%",
+    height: "7.5%",
+    position: "absolute",
+    borderRadius: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderColor: "rgba(0, 0, 0, 0.2)",
+    borderWidth: 1,
+    marginBottom: 8,
+    top: 120,
+    left: 25,
+  },
+  taskPrio: {
+    borderRadius: 5,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingRight: 8,
+    paddingLeft: 12,
+    borderColor: "#ffffff55",
+    borderWidth: 1,
+    color: "white"
+  },
+  taskPrioView: {
+    width: "22.5%",
+    height: "7.5%",
+    position: "absolute",
+    borderRadius: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderColor: "rgba(0, 0, 0, 0.2)",
+    borderWidth: 1,
+    marginBottom: 8,
+    top: 120,
+    left: 215,
+  },
+  taskDrop: {
+    position: "absolute",
+    top: 30,
+    borderRadius: 5,
+    backgroundColor: "#232528",
+    zIndex: 999,
+    elevation: 999,
+  },
+  taskDesc: {
+    width: "85%",
+    height: "30%",
+    position: "absolute",
+    borderRadius: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderColor: "rgba(0, 0, 0, 0.2)",
+    borderWidth: 1,
+    marginBottom: 8,
+    top: 280,
+  },
+  container: {
+    flexDirection: "row",
+  },
+  index: {
+    color: "#fff",
+    fontSize: 20,
+  },
+  taskContainer: {
+    borderRadius: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 5,
+    minHeight: 50,
+    marginTop: 20,
   },
 });
 
-LogBox.ignoreLogs(['Warning: ...']);
+LogBox.ignoreLogs(["Warning: ..."]);
 LogBox.ignoreAllLogs();

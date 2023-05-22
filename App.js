@@ -17,7 +17,7 @@ import { Octicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import { db } from './lib/firebase';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, getDocs, collection, addDoc } from 'firebase/firestore';
 import moment from 'moment';
 
 const Stack = createNativeStackNavigator();
@@ -35,6 +35,8 @@ function Navigators() {
 
   const [stats, setStats] = React.useState({});
   const [inventory, setInventory] = React.useState({});
+  const [tasks, setTasks] = React.useState([]);
+  const [sessions, setSessions] = React.useState([]);
 
   const handleLogOut = () => {
     logOut();
@@ -71,14 +73,50 @@ function Navigators() {
     }
   }
 
+  const getTasksAndSessions = async () => {
+    const tasksSnap = await getDocs(collection(db, "users", user.uid, "tasks"));
+    let task_li = [];
+    tasksSnap.forEach( (docu) => {
+      let data = docu.data();
+      data.id = docu.id;
+      task_li.push(data);
+    });
+    task_li.sort((a,b) => {
+      const d1 = moment(a.due_date.toString(), "M/D/YYYY, h:mm:ss A", true);
+      const d2 = moment(b.due_date.toString(), "M/D/YYYY, h:mm:ss A", true);
+      return d1-d2;
+    });
+    setTasks(task_li);
+    const sessionSnap = await getDocs(collection(db, "users", user.uid, "sessions"));
+    let session_li = [];
+    sessionSnap.forEach( (docu) => {
+      session_li.push(docu.data());
+    });
+    setSessions(session_li);
+  }
+
   useEffect(() => {
-    if (user !== null) loop();
+    if (user !== null) {
+      getTasksAndSessions();
+      loop();
+    }
   }, [user]);
 
   return (
     <>
     {user !== null ? (
-      <UserInfoContext.Provider value={{stats, updateStats: stats => setStats(stats), inventory, updateInventory: inventory => setInventory(inventory)}} >
+      <UserInfoContext.Provider value={
+        {
+          stats, 
+          updateStats: stats => setStats(stats), 
+          inventory, 
+          updateInventory: inventory => setInventory(inventory),
+          tasks,
+          setTasks,
+          sessions,
+          setSessions
+        }
+      }>
         <NavigationContainer>
           <Tab.Navigator screenOptions={{
             tabBarStyle: { paddingBottom:0, borderColor:"#161819" },

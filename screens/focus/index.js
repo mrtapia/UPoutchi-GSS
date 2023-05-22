@@ -1,17 +1,34 @@
 import * as React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import {
-	useCountdown,
 	CountdownCircleTimer,
 } from "react-native-countdown-circle-timer";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "react-native/Libraries/NewAppScreen";
 import { NewItemModal } from "../../components/shared/newItemModal";
 
+import { UserAuth } from "../../contexts/AuthContext";
+import { UserInfoContext } from "../../contexts/AuthContext";
+
+import { collection, addDoc, setDoc, doc, deleteDoc, Timestamp } from "firebase/firestore";
+import { db } from "../../lib/firebase";
+
 export function FocusScreen({ navigation }) {
+	const { user } = UserAuth();
+	const { sessions, setSessions } = React.useContext(UserInfoContext);
+
 	const [isPaused, setIsPaused] = React.useState(true);
 	const [isStart, setIsStart] = React.useState(true);
 	const [newItemModalVisible, setNewItemModalVisible] = React.useState(false);
+	const time = React.useRef(0);
+
+	const stopHandler = async () => {
+		await addDoc(collection(db, "users", user.uid, "sessions"), {
+			time: time.current,
+			date: Timestamp.now()
+		});
+		setSessions([...sessions, {time: time.current, date: datenow}]);
+	}
+
 	const togglePause = () => {
 		if (isStart) setIsStart(false);
 		setIsPaused(!isPaused);
@@ -20,8 +37,10 @@ export function FocusScreen({ navigation }) {
 	const children = ({ remainingTime }) => {
 		if (remainingTime === 0) {
 			setNewItemModalVisible(true);
+			stopHandler();
 			return `Time's up!`;
 		}
+		time.current = 1500 - remainingTime;
 		const minutes = Math.floor(remainingTime / 60);
 		const seconds = remainingTime % 60;
 		if (seconds <= 9) {
@@ -70,6 +89,7 @@ export function FocusScreen({ navigation }) {
 						setNewItemModalVisible(true);
 						setIsPaused(true);
 						setIsStart(true);
+						stopHandler();
 						setKey((prevKey) => prevKey + 1);
 					}}
 					size={80} 
