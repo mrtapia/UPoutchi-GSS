@@ -1,35 +1,13 @@
 
 import * as React from "react";	
 import {	
-  StyleSheet,	
   View,	
   Pressable,	
   Text,	
-  Image,	
-  TouchableOpacity,	
-  Keyboard,	
-  ScrollView,	
-  Modal,	
-  TextInput,	
-  Button,	
-  Dimensions,	
-  LogBox,	
-  Alert,
   Platform,	
 } from "react-native";	
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import moment from "moment";
-
-import {
-    collection,
-    addDoc,
-    setDoc,
-    doc,
-    getDocs,
-    query,
-    where,
-    Timestamp,
-  } from "firebase/firestore";
 
 export const DateTimePicker = ({date, setDate, readonly = false}) => {
     const [openDate, setOpenDate] = React.useState(false);
