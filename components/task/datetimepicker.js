@@ -69,8 +69,8 @@ export const DateTimePicker = ({date, setDate, readonly = false}) => {
         </Pressable>
     </View>
        
-        {/* {openDate && <RNDateTimePicker value={date == "" ? new Date() : stamp?.toDate()} mode='date' onChange={setDateTime} themeVariant='dark'/>}
-        {openTime && <RNDateTimePicker value={date == "" ? new Date() : stamp?.toDate()} mode='time' onChange={setDateTime} themeVariant='dark'/>} */}
+        {openDate && <RNDateTimePicker value={checkDate(date) ? date : datenow} mode='date' onChange={setDateTime} themeVariant='dark'/>}
+        {openTime && <RNDateTimePicker value={checkDate(date) ? date : datenow} mode='time' onChange={setDateTime} themeVariant='dark'/>}
     </>
     }
   </View>
