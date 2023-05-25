@@ -38,12 +38,12 @@ export const DateTimePicker = ({date, setDate, readonly = false}) => {
     <Pressable 
         className="px-4 py-2 bg-[#37383D] rounded-md" 
         onPress={ () => readonly ? {} : setOpenDate(true) }>
-            <Text className="text-white">{date == ""  || date == undefined ? moment(datenow).format("MMM D, YYYY") : moment(stamp?.toDate()).format("MMM D, YYYY")}</Text>
+            <Text className="text-white">{date == ""  || date == undefined ? moment(datenow).format("MMM D, YYYY") : moment(date).format("MMM D, YYYY")}</Text>
         </Pressable>
         <Pressable 
             className="px-4 py-2 bg-[#37383D] rounded-md"
             onPress={ () => readonly ? {} : setOpenTime(true) }>
-            <Text className="text-white">{date == "" || date == undefined ? moment(datenow).format("hh:mm A") : moment(stamp?.toDate()).format("hh:mm A")}</Text>
+            <Text className="text-white">{date == "" || date == undefined ? moment(datenow).format("hh:mm A") : moment(date).format("hh:mm A")}</Text>
         </Pressable>
     </View>
        
