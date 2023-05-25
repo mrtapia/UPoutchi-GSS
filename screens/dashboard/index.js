@@ -134,7 +134,7 @@ export function DashboardScreen({ navigation }) {
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
       let data = doc.data();
-      let day = moment(data.date_completed.toDate()).day();
+      let day = moment(data.date.toDate()).day();
       dataset[0].data[day] += 1;
     });
     setCompletedSessions({
