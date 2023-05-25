@@ -186,6 +186,24 @@ export function TaskScreen({ navigation }) {
     );
   };
 
+  const handleTaskErrors = (message) => {
+    return Alert.alert(
+      "Error",
+      message,
+      [
+        {
+          text: "Ok",
+          onPress: () => {
+            setVisible(false);
+          },
+        },
+      ],
+      {
+        cancelable: false,
+      }
+    );
+  }
+
   function checkInTimeList(task=taskList, filter=selected) {
     let li = [...task];
     li.sort((a, b) => {	
@@ -250,53 +268,85 @@ export function TaskScreen({ navigation }) {
 
   const handleAddTask = async () => {
     Keyboard.dismiss();
-    const new_task = {
-      due_date: date,
-      task_name: task,
-      priority: prio,
-      date_completed: "",	
-      tags: tags,
-      description: desc,
-    };
-    	
-    const docRef = await addDoc(	
-      collection(db, "users", user.uid, "tasks"),	
-      new_task	
-    );	
-    new_task.id = docRef.id;	
-    new_task.reveal = checkInTime(date, "");
-    let li = [...taskList, new_task];	
-    checkInTimeList(li);
-    clear();
-    setModalVisible(false);
+    const errors = {};
+
+    // Validate if required fields have value
+    if (!task) {
+      handleTaskErrors("Task name is required.");
+      errors.taskName = 'Required';
+    }
+    if (task.length > 30)
+    {
+      handleTaskErrors("Task name is longer than 30 characters.");
+      errors.taskLength = 'Too long';
+    }
+
+    if (Object.keys(errors).length === 0) {
+      // No validation errors, proceed with task submission
+      const new_task = {
+        due_date: date,
+        task_name: task,
+        priority: prio,
+        date_completed: "",	
+        tags: tags,
+        description: desc,
+      };
+        
+      const docRef = await addDoc(	
+        collection(db, "users", user.uid, "tasks"),	
+        new_task	
+      );	
+      new_task.id = docRef.id;	
+      new_task.reveal = checkInTime(date, "");
+      let li = [...taskList, new_task];	
+      checkInTimeList(li);
+      clear();
+      setModalVisible(false);
+    }
   };
 
   const handleUpdatedTask = async (index) => {
     Keyboard.dismiss();
-    let li = [...taskList];
-    
-    li[index].task_name = placeholderTask;
-    li[index].due_date = placeholderDate;
-    li[index].priority = placeholderPrio;
-    li[index].tags = placeholderTags;
-    li[index].description = placeholderDesc;
-    li[index].reveal = checkInTime(placeholderDate, li[index].date_completed);
+    const errors = {};
 
-    try {	
-      await setDoc(doc(db, "users", user.uid, "tasks", placeholderDocId), {	
-        task_name: placeholderTask,	
-        due_date: placeholderDate,	
-        priority: placeholderPrio,	
-        tags: placeholderTags,	
-        description: placeholderDesc,	
-      });	
-    } catch (err) {	
-      console.log(err);	
+    // Validate if required fields have value
+    if (!placeholderTask) {
+      handleTaskErrors("Task name is required.");
+      errors.taskName = 'Required';
+    }
+    if (placeholderTask.length > 30)
+    {
+      handleTaskErrors("Task name is longer than 30 characters.");
+      errors.taskLength = 'Too long';
     }
 
-    checkInTimeList(li);
-    clear();
-    setModalVisible(false);
+    if (Object.keys(errors).length === 0) {
+      // No validation errors, proceed with task submission
+      let li = [...taskList];
+    
+      li[index].task_name = placeholderTask;
+      li[index].due_date = placeholderDate;
+      li[index].priority = placeholderPrio;
+      li[index].tags = placeholderTags;
+      li[index].description = placeholderDesc;
+      li[index].reveal = checkInTime(placeholderDate, li[index].date_completed);
+
+      try {	
+        await setDoc(doc(db, "users", user.uid, "tasks", placeholderDocId), {	
+          task_name: placeholderTask,	
+          due_date: placeholderDate,	
+          priority: placeholderPrio,	
+          tags: placeholderTags,	
+          description: placeholderDesc,	
+        });	
+      } catch (err) {	
+        console.log(err);	
+      }
+
+      checkInTimeList(li);
+      clear();
+      setModalVisible(false);
+    }
   };
   
   const deleteTask = async (index) => {
