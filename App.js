@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {Pressable} from 'react-native';
+import {Platform, Pressable} from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -17,7 +17,7 @@ import { Octicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import { db } from './lib/firebase';
-import { doc, updateDoc, getDoc, getDocs, collection, addDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, getDocs, collection, addDoc, Timestamp } from 'firebase/firestore';
 import moment from 'moment';
 
 const Stack = createNativeStackNavigator();
@@ -59,7 +59,7 @@ function Navigators() {
             const datenow_formatted = moment(datenow, "M/D/YYYY, h:mm:ss A", true);
             const last_updated = moment((data.stats[key].updated).toString(), "M/D/YYYY, h:mm:ss A", true);
             diff = Math.floor((datenow_formatted - last_updated)/1000/60/30);
-            data.stats[key].value = data.stats[key].value - diff;
+            data.stats[key].value = (data.stats[key].value - diff) < 0 ? 0 : (data.stats[key].value - diff);
             data.stats[key].updated = datenow;
           });
           console.log("loop");
@@ -79,11 +79,14 @@ function Navigators() {
     tasksSnap.forEach( (docu) => {
       let data = docu.data();
       data.id = docu.id;
+      console.log("before", data.due_date);
+      data.due_date = new Timestamp(data.due_date.seconds, data.due_date.nanoseconds).toDate();
+      console.log("after", data.due_date);
       task_li.push(data);
     });
     task_li.sort((a,b) => {
-      const d1 = moment(a.due_date.toString(), "M/D/YYYY, h:mm:ss A", true);
-      const d2 = moment(b.due_date.toString(), "M/D/YYYY, h:mm:ss A", true);
+      const d1 = moment(a.due_date);
+      const d2 = moment(b.due_date);
       return d1-d2;
     });
     setTasks(task_li);
@@ -120,7 +123,9 @@ function Navigators() {
         <NavigationContainer>
           <Tab.Navigator screenOptions={{
             tabBarStyle: { paddingBottom:0, borderColor:"#161819" },
-            tabBarLabelStyle: {paddingBottom:30 },
+            tabBarLabelStyle: {
+              paddingBottom: Platform.OS == 'android' ? 0 : 30
+            },
             tabBarActiveBackgroundColor: "#161819",
             tabBarInactiveBackgroundColor: "#161819",
             tabBarActiveTintColor: "#3C78AF",

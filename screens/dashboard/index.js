@@ -26,90 +26,6 @@ Notes:
 - blank date_completed means task is not yet done
 */
 
-let dummy_data_completed = [
-  {
-    due_date: "5/2/2023, 11:30:00 AM",
-    // code for this date format: const date = new Date().toLocaleString();
-    task_name: "Exercise",
-    priority: 1,
-    date_completed: "5/2/2023, 11:30:00 AM",
-    tags: ["CS180", "Exercise"],
-    description:
-      "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.",
-  },
-  {
-    due_date: "5/4/2023, 11:30:00 AM",
-    task_name: "Exersfsfcise",
-    priority: 5,
-    date_completed: "5/3/2023, 11:30:00 AM",
-    tags: ["CS180"],
-    description:
-      "adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.",
-  },
-  {
-    due_date: "4/1/2023, 11:30:00 AM", //completed
-    task_name: "aadfaewr",
-    priority: 3,
-    date_completed: "4/1/2023 11:30:00 AM",
-    tags: ["CS180"],
-    description:
-      "adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.",
-  },
-  {
-    due_date: "3/5/2022, 11:30:00 AM",
-    task_name: "sswfewr",
-    priority: 4,
-    date_completed: "3/4/2022, 11:30:00 AM",
-    tags: ["CS180"],
-    description:
-      "adasdasdNeqqui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.",
-  },
-  {
-    due_date: "3/8/2022, 11:30:00 AM",
-    task_name: "Exersfsfcise",
-    priority: 3,
-    date_completed: "3/8/2022, 11:30:00 AM",
-    tags: ["CS180"],
-    description:
-      "adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.",
-  },
-  {
-    due_date: "6/20/2023, 11:30:00 AM",
-    task_name: "sfsfz",
-    priority: 2,
-    date_completed: "",
-    tags: [],
-    description: "adasdaum quia dolor sit amet, consectetur, adipisci velit.",
-  },
-];
-
-let focus_sessions = [
-  {
-    date: "5/2/2023, 11:30:00 AM",
-    duration: "00:15:00", // hours: minutes: seconds
-  },
-  {
-    date: "5/4/2023, 11:30:00 AM",
-    duration: "00:15:00", // hours: minutes: seconds
-  },
-  {
-    date: "4/1/2023, 11:30:00 AM", //completed
-    duration: "00:15:00", // hours: minutes: seconds
-  },
-  {
-    date: "3/5/2022, 11:30:00 AM",
-    duration: "00:15:00", // hours: minutes: seconds
-  },
-  {
-    date: "3/8/2022, 11:30:00 AM",
-    duration: "00:15:00", // hours: minutes: seconds
-  },
-  {
-    date: "6/20/2023, 11:30:00 AM",
-    duration: "00:15:00", // hours: minutes: seconds
-  },
-];
-
 const chartConfig = {
   backgroundColor: "#0000000",
   backgroundGradientFrom: "#022173",
@@ -355,14 +271,14 @@ export function DashboardScreen({ navigation }) {
       let year = moment(data.date.toDate()).get("year");
       dataset[0].data[labels.indexOf(year)] += 1;
     });
-    setCompletedTask({
+    setCompletedSessions({
       labels: labels,
       datasets: dataset,
     });
   };
 
   React.useEffect(() => {
-    getDailySessions();
+    getDailyTasks();
     getDailySessions();
   }, []);
 

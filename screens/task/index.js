@@ -13,21 +13,32 @@ import {
   Button,	
   Dimensions,	
   LogBox,	
-  Alert,	
+  Alert,
+  Platform,	
 } from "react-native";	
 import Checkbox from "expo-checkbox";	
 import { SelectList } from "react-native-dropdown-select-list";	
 import { AntDesign, MaterialIcons, Entypo } from "@expo/vector-icons";	
 import { NewItemModal } from "../../components/shared/newItemModal";	
 import ReactChipsInput from "react-native-chips";	
-import { Chips } from "../../components/chips";	
+import { Chips } from "../../components/task/chips";	
 import { UserAuth } from "../../contexts/AuthContext";	
 import { UserInfoContext } from "../../contexts/AuthContext";	
 import { collection, addDoc, setDoc, doc, deleteDoc, Timestamp } from "firebase/firestore";	
 import { db } from "../../lib/firebase";
 import moment from "moment";
+import RNDateTimePicker from '@react-native-community/datetimepicker';
+import { DateTimePicker } from "../../components/task/datetimepicker";
 
 const { width } = Dimensions.get("window");
+
+const TASK_BG_COLORS = {
+  1: '#3C78AF',
+  2: '#766EB4',
+  3: '#9166AD',
+  4: '#AA5DA1',
+  5: '#BD558F'
+}
 
 /* 
 Notes:
@@ -135,11 +146,16 @@ export function TaskScreen({ navigation }) {
   const [visible, setVisible] = React.useState(false);
   const [isConfirmed, setConfirmation] = React.useState(false);
 
+  const [openDate, setOpenDate] = React.useState(false);
+  const [openTime, setOpenTime] = React.useState(false);
+
   const { user } = UserAuth();	
   const { tasks, setTasks } = React.useContext(UserInfoContext);	
   React.useEffect(() => {	
-    if (tasks.length !== 0) setTaskList(tasks);	
-  }, [tasks]);
+    if (tasks.length !== 0) { 
+      checkInTimeList(tasks, "Pending");
+    }
+  }, []);
 
   const showConfirmDialog = (index) => {
     return Alert.alert(
@@ -170,129 +186,67 @@ export function TaskScreen({ navigation }) {
     );
   };
 
-  function checkInTimeList() {
-    let startRange = 0;
-    let endRange = 1;
-    var startDate = new Date();
-    var endDate = new Date();
+  function checkInTimeList(task=taskList, filter=selected) {
+    let li = [...task];
+    li.sort((a, b) => {	
+      const d1 = moment(a.due_date);	
+      const d2 = moment(b.due_date);	
+      return d1 - d2;	
+    });
 
-    if (selected == "Pending" || selected == "Completed") {
-      if (selected == "Pending") {
-        let li = [...taskList];
-        let i = 0;
-        while (i < li.length) {
-            currDate = li[i].due_date;
-            if (li[i].date_completed == "")  {
-              li[i].reveal = 1;
-              i++;
-            } else {
-              li[i].reveal = 0;
-              i++;
-            }
-        }
-        setTaskList(li);
-        return;
-      } else { 
-        let li = [...taskList];
-        let i = 0;
-        while (i < li.length) {
-            currDate = li[i].due_date;
-            if (li[i].date_completed == "")  {
-              li[i].reveal = 0;
-              i++;
-            } else {
-              li[i].reveal = 1;
-              i++;
-            }
-        }
-        setTaskList(li);
-        return;
-      }
+    for (let i = 0; i < li.length; i++) {
+      let dueDate = li[i].due_date;
+      let completedDate = li[i].date_completed;
+      li[i].reveal = checkInTime(dueDate, completedDate, filter);
     }
 
-    if (selected == "Today") {
-      startRange = 0;
-      endRange = 1;
-      startDate.setHours(0,0,0);
-      endDate.setHours(0,0,0);
-    } else if (selected == "Tomorrow") {
-      startRange = 1;
-      endRange = 2;
-      startDate.setHours(0,0,0);
-      endDate.setHours(0,0,0);
-    } else if (selected == "Next 7 Days") {
-      startRange = 0;
-      endRange = 7;
-      startDate.setHours(0,0,0);
-      endDate.setHours(0,0,0);
-    } else if (selected == "Overdue") {
-      startRange = -365250;
-      endRange = 0;
-    } else {
-      startRange = -365250;
-      endRange = 365250;
-      startDate.setHours(0,0,0);
-      endDate.setHours(0,0,0);
-    }
-    
-    startDate.setDate(startDate.getDate() + startRange);
-    endDate.setDate(endDate.getDate() + endRange);
-
-    let li = [...taskList];
-    let i = 0;
-    while (i < li.length) {
-        currDate = li[i].due_date;
-        if (new Date(currDate) >= startDate && new Date(currDate) < endDate)  {
-          li[i].reveal = 1;
-          i++;
-        } else {
-          li[i].reveal = 0;
-          i++;
-        }
-    }
     setTaskList(li);
-    return;
-}
-
-function checkInTime(currDate) {
-  let startRange = 0;
-  let endRange = 1;
-  var startDate = new Date();
-  var endDate = new Date();
-  if (selected == "Today") {
-    startRange = 0;
-    endRange = 1;
-    startDate.setHours(0,0,0);
-    endDate.setHours(0,0,0);
-  } else if (selected == "Tomorrow") {
-    startRange = 1;
-    endRange = 2;
-    startDate.setHours(0,0,0);
-    endDate.setHours(0,0,0);
-  } else if (selected == "Next 7 Days") {
-    startRange = 0;
-    endRange = 7;
-    startDate.setHours(0,0,0);
-    endDate.setHours(0,0,0);
-  } else if (selected == "Overdue") {
-    startRange = -365250;
-    endRange = 0;
-  } else {
-    startRange = -365250;
-    endRange = 365250;
-    startDate.setHours(0,0,0);
-    endDate.setHours(0,0,0);
+    setTask(li);
   }
 
-  startDate.setDate(startDate.getDate() + startRange);
-  endDate.setDate(endDate.getDate() + endRange);
-
-  if (new Date(currDate) >= startDate && new Date(currDate) < endDate)  {
-    return 1;
-  } else {
-    return 0;
+  function checkInTime(dueDate, completedDate, filter=selected) {
+    let momentDate = moment(dueDate);
+    if (filter == "Today") {
+      return momentDate.isSame(moment(), 'date') && !completedDate;
+    } 
+    
+    else if (filter == "Pending") {
+      return momentDate.isSameOrBefore(moment(), 'date') && !completedDate;
+    } 
+    
+    else if (filter == "Overdue") {
+      return momentDate.isBefore(moment(), 'date') && !completedDate;
+    } 
+    
+    else if (filter == "Tomorrow") {
+      return momentDate.isSame(moment().add(1, 'day'), 'date') && !completedDate;
+    } 
+    
+    else if (filter == "Next 7 Days") {
+      return momentDate.isSameOrBefore(moment().add(7, 'day'), 'date') && momentDate.isSameOrAfter(moment(), 'date') && !completedDate;
+    } 
+    
+    else if (filter == "Completed") {
+      return !completedDate ? false : true;
+    } 
+    
+    else {
+      return true;
+    }
   }
-}
+
+  const clear = () => {
+    setTask("");	
+    setDate("");	
+    setPrio("");	
+    setTags([]);	
+    setDesc("");
+    setPlaceholderTask("");	
+    setPlaceholderDate("");	
+    setPlaceholderPrio("");	
+    setPlaceholderTags([]);	
+    setPlaceholderDesc("");
+  }
 
   const handleAddTask = async () => {
     Keyboard.dismiss();
@@ -303,7 +257,6 @@ function checkInTime(currDate) {
       date_completed: "",	
       tags: tags,
       description: desc,
-      reveal: checkInTime(date)
     };
     	
     const docRef = await addDoc(	
@@ -311,19 +264,10 @@ function checkInTime(currDate) {
       new_task	
     );	
     new_task.id = docRef.id;	
-    let li = [...tasks, new_task];	
-    li.sort((a, b) => {	
-      const d1 = moment(a.due_date, "YYYY-MM-DD HH:MM", true);	
-      const d2 = moment(b.due_date, "YYYY-MM-DD HH:MM", true);	
-      return d1 - d2;	
-    });	
-    setTasks(li);	
-    setTaskList(li);	
-    setTask("");	
-    setDate("");	
-    setPrio("");	
-    setTags([]);	
-    setDesc("");
+    new_task.reveal = checkInTime(date, "");
+    let li = [...taskList, new_task];	
+    checkInTimeList(li);
+    clear();
     setModalVisible(false);
   };
 
@@ -336,6 +280,7 @@ function checkInTime(currDate) {
     li[index].priority = placeholderPrio;
     li[index].tags = placeholderTags;
     li[index].description = placeholderDesc;
+    li[index].reveal = checkInTime(placeholderDate, li[index].date_completed);
 
     try {	
       await setDoc(doc(db, "users", user.uid, "tasks", placeholderDocId), {	
@@ -349,17 +294,9 @@ function checkInTime(currDate) {
       console.log(err);	
     }
 
-    setTaskList(li);
-    setTasks(li);
-    checkInTime(placeholderDate);
-
-    setPlaceholderTask("");	
-    setPlaceholderDate("");	
-    setPlaceholderPrio("");	
-    setPlaceholderTags([]);	
-    setPlaceholderDesc("");
+    checkInTimeList(li);
+    clear();
     setModalVisible(false);
-    checkInTimeList();
   };
   
   const deleteTask = async (index) => {
@@ -371,6 +308,7 @@ function checkInTime(currDate) {
   };
 
   const editTask = (index) => {
+    console.log("edit date", taskList[index].due_date);
     setModalVisible(true);
     setPlaceholderTask(taskList[index].task_name);
     setPlaceholderDate(taskList[index].due_date);
@@ -381,6 +319,7 @@ function checkInTime(currDate) {
   };
 
   const checkTask = (index) => {
+    console.log("check date", taskList[index].due_date);
     setModalVisible(true);
     setPlaceholderTask(taskList[index].task_name);
     setPlaceholderDate(taskList[index].due_date);
@@ -401,17 +340,17 @@ function checkInTime(currDate) {
         date_completed: datenow	
       }, {merge: true});	
       temp[index].date_completed = datenow;	
-      temp[index].checked = 1;
-      setNewItemModalVisible(true);
+      temp[index].reveal = checkInTime(temp[index].due_date, datenow);
+      setNewItemModalVisible(true);	
     } else {	
       await setDoc(doc(db, "users", user.uid, "tasks", temp[index].id), {	
         date_completed: ""	
       }, {merge: true});	
       temp[index].date_completed = "";	
-      temp[index].checked = 0;
+      temp[index].reveal = checkInTime(temp[index].due_date, "");
     }	
-    setTaskList(temp);
-    checkInTimeList();
+    setTaskList(temp);	
+    setTask(temp);
   };
 
   const dateData = [
@@ -432,270 +371,333 @@ function checkInTime(currDate) {
     {key:'5', value:5},
   ];
 
-    return(
+    return (
       <>
-      <NewItemModal visible={newItemModalVisible} setVisible={setNewItemModalVisible} action={"TASK"}/>
-      <View style = {{paddingHorizontal:10, paddingVertical:15, flex:1}} className="bg-[#232528]">
-    
-        <SelectList 
-              setSelected={(val) => setSelected(val)} 
-              search={false}
-              placeholder='All'
-              data={dateData} 
-              save="value"
-              boxStyles={{backgroundColor: "#EE7A77", borderColor: "#EE7A77"}}	
-              inputStyles={{color: "white", fontWeight: 'bold', fontSize:18}}	
-              dropdownStyles={{backgroundColor: "#0f0f0f"}}	
-              dropdownItemStyles={{backgroundColor: "#0f0f0f"}}	
-              dropdownTextStyles={{backgroundColor: "#0f0f0f", color: "white"}}	
-              onSelect={() => checkInTimeList()}
+        <NewItemModal
+          visible={newItemModalVisible}
+          setVisible={setNewItemModalVisible}
+          action={"TASK"}
+        />
+        <View
+          style={{ paddingHorizontal: 10, paddingVertical: 15, flex: 1 }}
+          className="bg-[#232528]"
+        >
+          <SelectList
+            setSelected={(val) => setSelected(val)}
+            search={false}
+            placeholder="Pending"
+            defaultOption={{key:'3', value:'Pending'}}
+            data={dateData}
+            save="value"
+            boxStyles={{ backgroundColor: "#EE7A77", borderColor: "#EE7A77" }}
+            inputStyles={{ color: "white", fontWeight: "bold", fontSize: 18 }}
+            dropdownStyles={{ backgroundColor: "#0f0f0f" }}
+            dropdownItemStyles={{ backgroundColor: "#0f0f0f" }}
+            dropdownTextStyles={{ backgroundColor: "#0f0f0f", color: "white" }}
+            onSelect={() => checkInTimeList()}
           />
 
-        <View style = {{paddingBottom:35, flex:1}}>
-        <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps='handled'>
-
-        {
-            taskList.map((item, index) => {
-              const isChecked = item.date_completed == "" ? false : true;
-              if (taskList[index].reveal == 1) {
-              return (
-                <View style={styles.container} key={index}>
-                <View className={isChecked ? "bg-[#20517f]" : `bg-[#3C78AF]`} style={styles.taskContainer}>
-                  <View className="flex flex-row">
-                    <Checkbox className="mr-2 border-white"
-                      color={"transparent"}
-                      value={isChecked}
-                      onValueChange={() => onCheck(index)}
-                    /> 
-                    <Text className={`text-white text-base ${isChecked ? "line-through" : ""}`}>{item.task_name}</Text>
-                  </View>
-                    <View className="flex flex-row gap-2">
-                    <TouchableOpacity key={3*index} onPress={() => {checkTask(index); setOption(2); makeGlobal(index);}}>
-                        <AntDesign  name="eyeo" size={22} color='#fff' />
-                    </TouchableOpacity>
-                    <TouchableOpacity key={3*index + 1} onPress={() => {editTask(index); setOption(1); makeGlobal(index);}}>
-                        <AntDesign name="edit" size={22} color='#fff' />
-                    </TouchableOpacity> 
-                    <TouchableOpacity key={3*index + 2} onPress={() => showConfirmDialog(index)}>
-                        <MaterialIcons  name="delete" size={22} color='#fff' />
-                    </TouchableOpacity>
+          <View style={{ paddingBottom: 35, flex: 1 }}>
+            <ScrollView
+              contentContainerStyle={{ flexGrow: 1 }}
+              keyboardShouldPersistTaps="handled"
+            >
+              {taskList.map((item, index) => {
+                const isChecked = !item.date_completed ? false : true;
+                const taskBgColor = isChecked ? '#161819' : TASK_BG_COLORS[item.priority];
+                if (item.reveal) {
+                  return (
+                    <View style={styles.container} key={index}>
+                      <View
+                        style={[styles.taskContainer, {backgroundColor: taskBgColor}]}
+                      >
+                        <View className="flex flex-row">
+                          <Checkbox
+                            className="mr-2 border-white"
+                            color={isChecked ? "#161819" : `${taskBgColor}`}
+                            value={isChecked}
+                            onValueChange={() => onCheck(index)}
+                          />
+                          <Text
+                            className={`text-white text-base ${
+                              isChecked ? "line-through" : ""
+                            }`}
+                          >
+                            {item.task_name}
+                          </Text>
+                        </View>
+                        <View className="flex flex-row gap-2">
+                          <TouchableOpacity
+                            key={3 * index}
+                            onPress={() => {
+                              checkTask(index);
+                              setOption(2);
+                              makeGlobal(index);
+                            }}
+                          >
+                            <AntDesign name="eyeo" size={22} color="#fff" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            key={3 * index + 1}
+                            onPress={() => {
+                              editTask(index);
+                              setOption(1);
+                              makeGlobal(index);
+                            }}
+                          >
+                            <AntDesign name="edit" size={22} color="#fff" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            key={3 * index + 2}
+                            onPress={() => showConfirmDialog(index)}
+                          >
+                            <MaterialIcons
+                              name="delete"
+                              size={22}
+                              color="#fff"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
                     </View>
-                    
-                </View>
-                </View>
-              )}
-            })
-          }
+                  );
+                }
+              })}
+            </ScrollView>
+          </View>
 
-        </ScrollView>
+          <TouchableOpacity
+            onPress={() => {
+              setModalVisible(true);
+              setOption(0);
+            }}
+          >
+            <AntDesign
+              style={styles.plus}
+              name="plussquare"
+              size={40}
+              color="#3C78AF"
+            />
+          </TouchableOpacity>
+
+          <Modal
+            animationType="slide"
+            transparent
+            visible={isModalVisible}
+            presentationStyle="overFullScreen"
+            onDismiss={() => setModalVisible(false)}
+          >
+            <View className="flex-1 justify-center items-center bg-[#000000bb]">
+              <View className="flex h-3/5 w-5/6 bg-[#232528] p-4 rounded">
+                <View className="flex flex-grow">
+                  <ScrollView
+                    contentContainerStyle={{ flexGrow: 1 }}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    <Text className="text-[16px] my-2 text-white">
+                      Task Name
+                    </Text>
+                    {option === 0 && (
+                      <TextInput
+                        placeholder="Enter something..."
+                        value={task}
+                        className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                        placeholderTextColor={"#ffffffaa"}
+                        onChangeText={(text) => setTask(text)}
+                      />
+                    )}
+                    {option === 1 && (
+                      <TextInput
+                        value={placeholderTask}
+                        className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                        onChangeText={(text) => setPlaceholderTask(text)}
+                      />
+                    )}
+                    {option === 2 && (
+                      <TextInput
+                        value={placeholderTask}
+                        className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                        readOnly={true}
+                      />
+                    )}
+                    <View className="flex flex-row justify-between">
+                      <View className="flex w-3/4">
+                        <Text className="text-[16px] my-2 text-white">
+                          Date Due
+                        </Text>
+                        {option === 0 && (
+                          <DateTimePicker date={date} setDate={setDate} />
+                        )}
+                        {option === 1 && (
+                          <DateTimePicker
+                            date={placeholderDate}
+                            setDate={setPlaceholderDate}
+                          />
+                        )}
+                        {option === 2 && (
+                          <DateTimePicker
+                            date={placeholderDate}
+                            setDate={setPlaceholderDate}
+                            readonly={true}
+                          />
+                        )}
+                      </View>
+                      <View className="flex w-1/5">
+                        <Text className="text-[16px] my-2 text-white">
+                          Priority
+                        </Text>
+                        <View className="z-50">
+                          {option === 0 && (
+                            <SelectList
+                              defaultOption={{ key: "1", value: 1 }}
+                              setSelected={(val) => setPrio(val)}
+                              boxStyles={styles.taskPrio}
+                              inputStyles={{ color: "white" }}
+                              dropdownStyles={styles.taskDrop}
+                              dropdownTextStyles={{ color: "white" }}
+                              arrowicon={
+                                <Entypo
+                                  name="chevron-down"
+                                  size={12}
+                                  color="white"
+                                />
+                              }
+                              search={false}
+                              data={prioData}
+                            />
+                          )}
+                          {option === 1 && (
+                            <SelectList
+                              setSelected={(val) => setPlaceholderPrio(val)}
+                              boxStyles={styles.taskPrio}
+                              inputStyles={{ color: "white" }}
+                              dropdownStyles={styles.taskDrop}
+                              dropdownTextStyles={{ color: "white" }}
+                              arrowicon={
+                                <Entypo
+                                  name="chevron-down"
+                                  size={12}
+                                  color="white"
+                                />
+                              }
+                              search={false}
+                              placeholder={placeholderPrio}
+                              data={prioData}
+                            />
+                          )}
+                          {option === 2 && (
+                            <TextInput
+                              value={placeholderPrio}
+                              className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"
+                              readOnly={true}
+                            />
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                    <Text className="text-[16px] my-2 text-white">Tags</Text>
+                    {(option === 0 || option === 1) && (
+                      <View className="-pt-[18px] -mt-[36px] -z-10">
+                        <ReactChipsInput
+                          label=" "
+                          initialChips={option == 0 ? tags : placeholderTags}
+                          onChangeChips={(chips) =>
+                            option == 0
+                              ? setTags(chips)
+                              : setPlaceholderTags(chips)
+                          }
+                          chipStyle={{ backgroundColor: "#ffffff55" }}
+                          inputStyle={{
+                            fontSize: 16,
+                            borderColor: "#ffffff55",
+                            borderRadius: 5,
+                            borderWidth: 1,
+                            marginBottom: 4,
+                            color: "#fff",
+                          }}
+                          labelStyle={{ display: "none" }}
+                          labelOnBlur={{ display: "none" }}
+                        />
+                      </View>
+                    )}
+                    {option === 2 && placeholderTags && (
+                      <View className="flex flex-row flex-wrap">
+                        {placeholderTags.map((item, index) => {
+                          return <Chips value={item} key={index} />;
+                        })}
+                      </View>
+                    )}
+                    <Text className="text-[16px] my-2 text-white">
+                      Task Description
+                    </Text>
+                    {option === 0 && (
+                      <TextInput
+                        placeholder="Enter something..."
+                        multiline
+                        value={desc}
+                        textAlignVertical="top"
+                        className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"
+                        placeholderTextColor={"#ffffffaa"}
+                        onChangeText={(desc) => setDesc(desc)}
+                      />
+                    )}
+                    {option === 1 && (
+                      <TextInput
+                        value={placeholderDesc}
+                        multiline
+                        textAlignVertical="top"
+                        className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"
+                        placeholderTextColor={"#ffffffaa"}
+                        onChangeText={(desc) => setPlaceholderDesc(desc)}
+                      />
+                    )}
+                    {option === 2 && (
+                      <TextInput
+                        value={placeholderDesc}
+                        multiline
+                        textAlignVertical="top"
+                        className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"
+                        placeholderTextColor={"#ffffffaa"}
+                        readOnly={true}
+                      />
+                    )}
+                  </ScrollView>
+                </View>
+                <View className="flex flex-row justify-between">
+                  <Button
+                    title="Close"
+                    onPress={() => {
+                      clear();
+                      setModalVisible(false);
+                    }}
+                    color="#3C78AF"
+                  />
+                  <View style={{ width: 150 }} />
+                  {option === 0 && (
+                    <Button
+                      title="Add Task"
+                      onPress={() => {
+                        handleAddTask();
+                      }}
+                      color="#3C78AF"
+                    />
+                  )}
+                  {option === 1 && (
+                    <Button
+                      title="Edit Task"
+                      onPress={() => {
+                        handleUpdatedTask(global.index);
+                      }}
+                      color="#3C78AF"
+                    />
+                  )}
+                </View>
+              </View>
+            </View>
+          </Modal>
         </View>
-
-        <TouchableOpacity onPress={() => {setModalVisible(true); setOption(0);}}>
-            <AntDesign style={styles.plus} name="plussquare" size={40} color='#3C78AF'/>
-        </TouchableOpacity>
-
-        <Modal	
-          animationType="slide"	
-          transparent	
-          visible={isModalVisible}	
-          presentationStyle="overFullScreen"	
-          onDismiss={() => setModalVisible(false)}	
-        >	
-          <View className="flex-1 justify-center items-center bg-[#000000bb]">	
-            <View className="flex h-3/5 w-5/6 bg-[#232528] p-4 rounded">	
-              <View className="flex flex-grow">	
-                <ScrollView	
-                  contentContainerStyle={{ flexGrow: 1 }}	
-                  keyboardShouldPersistTaps="handled"	
-                >	
-                  <Text className="text-[16px] my-2 text-white">Task Name</Text>	
-                  {option === 0 && (	
-                    <TextInput	
-                      placeholder="Enter something..."	
-                      value={task}	
-                      className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"	
-                      placeholderTextColor={"#ffffffaa"}	
-                      onChangeText={(text) => setTask(text)}	
-                    />	
-                  )}	
-                  {option === 1 && (	
-                    <TextInput	
-                      value={placeholderTask}	
-                      className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"	
-                      onChangeText={(text) => setPlaceholderTask(text)}	
-                    />	
-                  )}	
-                  {option === 2 && (	
-                    <TextInput	
-                      value={placeholderTask}	
-                      className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"	
-                      readOnly={true}	
-                    />	
-                  )}	
-                  <View className="flex flex-row justify-between">	
-                    <View className="flex w-3/4">	
-                      <Text className="text-[16px] my-2 text-white">Date Due</Text>	
-                      {option === 0 && (	
-                        <TextInput	
-                          placeholder="YYYY-MM-DD HH:MM"	
-                          value={date}	
-                          className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"	
-                          placeholderTextColor={"#ffffffaa"}	
-                          onChangeText={(text) => setDate(text)}	
-                        />	
-                      )}	
-                      {option === 1 && (	
-                        <TextInput	
-                          value={placeholderDate}	
-                          className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"	
-                          onChangeText={(text) => setPlaceholderDate(text)}	
-                        />	
-                      )}	
-                      {option === 2 && (	
-                        <TextInput	
-                          value={placeholderDate}	
-                          className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"	
-                          readOnly={true}	
-                        />	
-                      )}	
-                    </View>	
-                    <View className="flex w-1/5">	
-                      <Text className="text-[16px] my-2 text-white">Priority</Text>	
-                      <View className="z-50">	
-                        {option === 0 && (	
-                          <SelectList	
-                            defaultOption={{ key: "1", value: 1 }}	
-                            setSelected={(val) => setPrio(val)}	
-                            boxStyles={styles.taskPrio}	
-                            inputStyles={{color: "white"}}	
-                            dropdownStyles={styles.taskDrop}	
-                            dropdownTextStyles={{color: "white"}}	
-                            arrowicon={<Entypo name="chevron-down" size={12} color="white" />}	
-                            search={false}	
-                            data={prioData}	
-                          />	
-                        )}	
-                        {option === 1 && (	
-                          <SelectList	
-                            setSelected={(val) => setPlaceholderPrio(val)}	
-                            boxStyles={styles.taskPrio}	
-                            inputStyles={{color: "white"}}	
-                            dropdownStyles={styles.taskDrop}	
-                            dropdownTextStyles={{color: "white"}}	
-                            arrowicon={<Entypo name="chevron-down" size={12} color="white" />}	
-                            search={false}	
-                            placeholder={placeholderPrio}	
-                            data={prioData}	
-                          />	
-                        )}	
-                        {option === 2 && (	
-                          <TextInput	
-                            value={placeholderPrio}	
-                            className="w-full px-2 py-2 rounded-md border-[#ffffff55] border text-white"	
-                            readOnly={true}	
-                          />	
-                        )}	
-                      </View>	
-                    </View>	
-                  </View>	
-                  <Text className="text-[16px] my-2 text-white">Tags</Text>	
-                  {(option === 0 || option === 1) && (	
-                    <View className="-pt-[18px] -mt-[36px] -z-10">	
-                      <ReactChipsInput	
-                        label=" "	
-                        initialChips={option == 0 ? tags : placeholderTags}	
-                        onChangeChips={(chips) =>	
-                          option == 0	
-                            ? setTags(chips)	
-                            : setPlaceholderTags(chips)	
-                        }	
-                        chipStyle={{ backgroundColor: "#ffffff55" }}	
-                        inputStyle={{	
-                          fontSize: 16,	
-                          borderColor: "#ffffff55",	
-                          borderRadius: 5,	
-                          borderWidth: 1,	
-                          marginBottom: 4,	
-                          color: "white !important",	
-                        }}	
-                        labelStyle={{ display: "none" }}	
-                        labelOnBlur={{ display: "none" }}	
-                      />	
-                    </View>	
-                  )}	
-                  {option === 2 && placeholderTags && (	
-                    <View className="flex flex-row flex-wrap">	
-                      {placeholderTags.map((item, index) => {	
-                        return <Chips value={item} key={index} />;	
-                      })}	
-                    </View>	
-                  )}	
-                  <Text className="text-[16px] my-2 text-white">Task Description</Text>	
-                  {option === 0 && (	
-                    <TextInput	
-                      placeholder="Enter something..."	
-                      multiline	
-                      value={desc}	
-                      textAlignVertical="top"	
-                      className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"	
-                      placeholderTextColor={"#ffffffaa"}	
-                      onChangeText={(desc) => setDesc(desc)}	
-                    />	
-                  )}	
-                  {option === 1 && (	
-                    <TextInput	
-                      value={placeholderDesc}	
-                      multiline	
-                      textAlignVertical="top"	
-                      className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"	
-                      placeholderTextColor={"#ffffffaa"}	
-                      onChangeText={(desc) => setPlaceholderDesc(desc)}	
-                    />	
-                  )}	
-                  {option === 2 && (	
-                    <TextInput	
-                      value={placeholderDesc}	
-                      multiline	
-                      textAlignVertical="top"	
-                      className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"	
-                      placeholderTextColor={"#ffffffaa"}	
-                      readOnly={true}	
-                    />	
-                  )}	
-                </ScrollView>	
-              </View>	
-              <View className="flex flex-row justify-between">	
-                <Button	
-                  title="Close"	
-                  onPress={() => setModalVisible(false)}	
-                  color="#3C78AF"	
-                />	
-                <View style={{ width: 150 }} />	
-                {option === 0 && (	
-                  <Button	
-                    title="Add Task"	
-                    onPress={() => {	
-                      handleAddTask();	
-                    }}	
-                    color="#3C78AF"	
-                  />	
-                )}	
-                {option === 1 && (	
-                  <Button	
-                    title="Edit Task"	
-                    onPress={() => {	
-                      handleUpdatedTask(global.index);	
-                    }}	
-                    color="#3C78AF"	
-                  />	
-                )}	
-              </View>	
-            </View>	
-          </View>	
-        </Modal>	
-      </View>	
-    </>	
-  );	
+      </>
+    );	
 }
 
 const styles = StyleSheet.create({

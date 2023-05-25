@@ -34,7 +34,7 @@ export function HomeScreen ({ navigation }) {
               const datenow_formatted = moment(datenow, "M/D/YYYY, h:mm:ss A", true);
               const last_updated = moment((data.stats[key].updated).toString(), "M/D/YYYY, h:mm:ss A", true);
               diff = Math.floor((datenow_formatted - last_updated)/1000/60/30);
-              data.stats[key].value = data.stats[key].value - diff;
+              data.stats[key].value = (data.stats[key].value - diff) < 0 ? 0 : (data.stats[key].value - diff);
               data.stats[key].updated = datenow;
             });
             if (diff > 0) {
