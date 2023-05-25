@@ -72,7 +72,7 @@ const dummy_data = [
     due_date: '2023-5-25 11:30',  //completed
     task_name: 'aadfaewr',
     priority: 3,
-    date_completed: '5/1/2023 11:30',
+    date_completed: '2023-5-1 11:30',
     tags: [
       "CS180"
     ],
@@ -100,7 +100,8 @@ const dummy_data = [
     ],
     description: 'adasdasdNeque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.',
     reveal: 1
-  },{
+  },
+  {
     due_date: '2023-5-30 11:30', // all
     task_name: 'sfsfz',
     priority: 2,
@@ -172,24 +173,68 @@ export function TaskScreen({ navigation }) {
   function checkInTimeList() {
     let startRange = 0;
     let endRange = 1;
+    var startDate = new Date();
+    var endDate = new Date();
+
+    if (selected == "Pending" || selected == "Completed") {
+      if (selected == "Pending") {
+        let li = [...taskList];
+        let i = 0;
+        while (i < li.length) {
+            currDate = li[i].due_date;
+            if (li[i].date_completed == "")  {
+              li[i].reveal = 1;
+              i++;
+            } else {
+              li[i].reveal = 0;
+              i++;
+            }
+        }
+        setTaskList(li);
+        return;
+      } else { 
+        let li = [...taskList];
+        let i = 0;
+        while (i < li.length) {
+            currDate = li[i].due_date;
+            if (li[i].date_completed == "")  {
+              li[i].reveal = 0;
+              i++;
+            } else {
+              li[i].reveal = 1;
+              i++;
+            }
+        }
+        setTaskList(li);
+        return;
+      }
+    }
+
     if (selected == "Today") {
       startRange = 0;
       endRange = 1;
+      startDate.setHours(0,0,0);
+      endDate.setHours(0,0,0);
     } else if (selected == "Tomorrow") {
       startRange = 1;
       endRange = 2;
+      startDate.setHours(0,0,0);
+      endDate.setHours(0,0,0);
     } else if (selected == "Next 7 Days") {
       startRange = 0;
       endRange = 7;
+      startDate.setHours(0,0,0);
+      endDate.setHours(0,0,0);
+    } else if (selected == "Overdue") {
+      startRange = -365250;
+      endRange = 0;
     } else {
       startRange = -365250;
       endRange = 365250;
+      startDate.setHours(0,0,0);
+      endDate.setHours(0,0,0);
     }
     
-    var startDate = new Date();
-    var endDate = new Date();
-    startDate.setHours(0,0,0);
-    endDate.setHours(0,0,0);
     startDate.setDate(startDate.getDate() + startRange);
     endDate.setDate(endDate.getDate() + endRange);
 
@@ -206,68 +251,39 @@ export function TaskScreen({ navigation }) {
         }
     }
     setTaskList(li);
-}
-
-  function checkInTimeList() {
-    let startRange = 0;
-    let endRange = 1;
-    if (selected == "Today") {
-      startRange = 0;
-      endRange = 1;
-    } else if (selected == "Tomorrow") {
-      startRange = 1;
-      endRange = 2;
-    } else if (selected == "Next 7 Days") {
-      startRange = 0;
-      endRange = 7;
-    } else {
-      startRange = -365250;
-      endRange = 365250;
-    }
-    
-    var startDate = new Date();
-    var endDate = new Date();
-    startDate.setHours(0,0,0);
-    endDate.setHours(0,0,0);
-    startDate.setDate(startDate.getDate() + startRange);
-    endDate.setDate(endDate.getDate() + endRange);
-
-    let li = [...taskList];
-    let i = 0;
-    while (i < li.length) {
-        currDate = li[i].due_date;
-        if (new Date(currDate) >= startDate && new Date(currDate) < endDate)  {
-          li[i].reveal = 1;
-          i++;
-        } else {
-          li[i].reveal = 0;
-          i++;
-        }
-    }
-    setTaskList(li);
+    return;
 }
 
 function checkInTime(currDate) {
   let startRange = 0;
   let endRange = 1;
+  var startDate = new Date();
+  var endDate = new Date();
   if (selected == "Today") {
     startRange = 0;
     endRange = 1;
+    startDate.setHours(0,0,0);
+    endDate.setHours(0,0,0);
   } else if (selected == "Tomorrow") {
     startRange = 1;
     endRange = 2;
+    startDate.setHours(0,0,0);
+    endDate.setHours(0,0,0);
   } else if (selected == "Next 7 Days") {
     startRange = 0;
     endRange = 7;
+    startDate.setHours(0,0,0);
+    endDate.setHours(0,0,0);
+  } else if (selected == "Overdue") {
+    startRange = -365250;
+    endRange = 0;
   } else {
     startRange = -365250;
     endRange = 365250;
+    startDate.setHours(0,0,0);
+    endDate.setHours(0,0,0);
   }
 
-  var startDate = new Date();
-  var endDate = new Date();
-  startDate.setHours(0,0,0);
-  endDate.setHours(0,0,0);
   startDate.setDate(startDate.getDate() + startRange);
   endDate.setDate(endDate.getDate() + endRange);
 
@@ -385,25 +401,28 @@ function checkInTime(currDate) {
         date_completed: datenow	
       }, {merge: true});	
       temp[index].date_completed = datenow;	
-      setNewItemModalVisible(true);	
+      temp[index].checked = 1;
+      setNewItemModalVisible(true);
     } else {	
       await setDoc(doc(db, "users", user.uid, "tasks", temp[index].id), {	
         date_completed: ""	
       }, {merge: true});	
       temp[index].date_completed = "";	
+      temp[index].checked = 0;
     }	
-    setTaskList(temp);	
+    setTaskList(temp);
+    checkInTimeList();
   };
 
   const dateData = [
-      {key:'1', value:'Today'},
-      {key:'2', value:'Pending'},
-      {key:'3', value:'Overdue'},
-      {key:'4', value:'Tomorrow'},
-      {key:'5', value:'Next 7 Days'}, // changed from This Week
-      {key:'6', value:'Completed'},
-      {key:'7', value:'All'}, // added to include tasks with due date ahead of 8 days from today
-  ];
+    {key:'1', value:'All'}, // added to include tasks with due date ahead of 8 days from today
+    {key:'2', value:'Today'},
+    {key:'3', value:'Pending'},
+    {key:'4', value:'Overdue'},
+    {key:'5', value:'Tomorrow'},
+    {key:'6', value:'Next 7 Days'}, // changed from This Week
+    {key:'7', value:'Completed'},
+]
 
   const prioData = [
     {key:'1', value:1},
