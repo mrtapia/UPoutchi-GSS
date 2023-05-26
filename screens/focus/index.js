@@ -27,9 +27,10 @@ export function FocusScreen({ navigation }) {
 	const time = React.useRef(0);
 
 	const stopHandler = async () => {
+		const datenow = new Date();
 		await addDoc(collection(db, "users", user.uid, "sessions"), {
 			time: time.current,
-			date: Timestamp.now(),
+			date: datenow,
 		});
 		setSessions([...sessions, { time: time.current, date: datenow }]);
 	};

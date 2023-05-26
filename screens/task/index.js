@@ -436,7 +436,6 @@ export function TaskScreen({ navigation }) {
             setSelected={(val) => setSelected(val)}
             search={false}
             placeholder="Pending"
-            defaultOption={{key:'3', value:'Pending'}}
             data={dateData}
             save="value"
             boxStyles={{ backgroundColor: "#EE7A77", borderColor: "#EE7A77" }}

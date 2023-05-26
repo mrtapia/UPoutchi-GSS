@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {Platform, Pressable} from 'react-native';
+import {Platform, Pressable, Alert} from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -39,7 +39,29 @@ function Navigators() {
   const [sessions, setSessions] = React.useState([]);
 
   const handleLogOut = () => {
-    logOut();
+    return Alert.alert(
+      "Log out",
+      "Are you sure you want to log out?",
+      [
+        // The "No" button
+        // Does nothing but dismiss the dialog when tapped
+        {
+          text: "No",
+          onPress: () => {},
+        },
+
+        // The "Yes" button
+        {
+          text: "Yes",
+          onPress: () => {
+            logOut();
+          },
+        },
+      ],
+      {
+        cancelable: false,
+      }
+    );
   }
 
   function delay(ms) {
