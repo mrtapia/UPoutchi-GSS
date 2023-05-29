@@ -127,7 +127,7 @@ const dummy_data = [
 
 export function TaskScreen({ navigation }) {
   const [taskList, setTaskList] = React.useState([]);
-  const [selected, setSelected] = React.useState("");
+  const [selected, setSelected] = React.useState("Pending");
   const [isModalVisible, setModalVisible] = React.useState(false);
   const [newItemModalVisible, setNewItemModalVisible] = React.useState(false);
   const [task, setTask] = React.useState("");	
@@ -144,10 +144,6 @@ export function TaskScreen({ navigation }) {
   const [placeholderDesc, setPlaceholderDesc] = React.useState("");
 
   const [visible, setVisible] = React.useState(false);
-  const [isConfirmed, setConfirmation] = React.useState(false);
-
-  const [openDate, setOpenDate] = React.useState(false);
-  const [openTime, setOpenTime] = React.useState(false);
 
   const { user } = UserAuth();	
   const { tasks, setTasks } = React.useContext(UserInfoContext);	
@@ -283,7 +279,9 @@ export function TaskScreen({ navigation }) {
 
     if (Object.keys(errors).length === 0) {
       // No validation errors, proceed with task submission
+      console.log("add", date);
       const new_task = {
+        
         due_date: date,
         task_name: task,
         priority: prio,

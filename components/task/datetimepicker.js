@@ -14,9 +14,16 @@ export const DateTimePicker = ({date, setDate, readonly = false}) => {
     const [openTime, setOpenTime] = React.useState(false);
     const datenow = new Date();
 
+    React.useEffect(() => {
+        if (!date) {
+            setDate(datenow);
+        }
+    }, []);
+
     const setDateTime = (event, newDate) => {
         setOpenDate(false);
         setOpenTime(false);
+        console.log("set", newDate);
         setDate(newDate);
     }
 
