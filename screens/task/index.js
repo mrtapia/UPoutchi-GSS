@@ -15,6 +15,8 @@ import {
   LogBox,	
   Alert,
   Platform,	
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback
 } from "react-native";	
 import Checkbox from "expo-checkbox";	
 import { SelectList } from "react-native-dropdown-select-list";	
@@ -535,11 +537,10 @@ export function TaskScreen({ navigation }) {
             onDismiss={() => setModalVisible(false)}
           >
             <View className="flex-1 justify-center items-center bg-[#000000bb]">
-              <View className="flex h-3/5 w-5/6 bg-[#232528] p-4 rounded">
-                <View className="flex flex-grow">
+            <View className="flex h-3/4 w-5/6 bg-[#232528] p-4 rounded">
                   <ScrollView
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}
+                    keyboardShouldPersistTaps="always"
                   >
                     <Text className="text-[16px] my-2 text-white">
                       Task Name
@@ -683,7 +684,7 @@ export function TaskScreen({ navigation }) {
                         multiline
                         value={desc}
                         textAlignVertical="top"
-                        className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"
+                        className="border  border-[#ffffff55] text-white rounded-md p-2 -z-10"
                         placeholderTextColor={"#ffffffaa"}
                         onChangeText={(desc) => setDesc(desc)}
                       />
@@ -693,7 +694,7 @@ export function TaskScreen({ navigation }) {
                         value={placeholderDesc}
                         multiline
                         textAlignVertical="top"
-                        className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"
+                        className="border  border-[#ffffff55] text-white rounded-md p-2 -z-10"
                         placeholderTextColor={"#ffffffaa"}
                         onChangeText={(desc) => setPlaceholderDesc(desc)}
                       />
@@ -703,14 +704,14 @@ export function TaskScreen({ navigation }) {
                         value={placeholderDesc}
                         multiline
                         textAlignVertical="top"
-                        className="border  border-[#ffffff55] text-white rounded-md h-2/5 p-2 -z-10"
+                        className="border  border-[#ffffff55] text-white rounded-md p-2 -z-10"
                         placeholderTextColor={"#ffffffaa"}
                         readOnly={true}
                       />
                     )}
+                  
                   </ScrollView>
-                </View>
-                <View className="flex flex-row justify-between">
+                  <View className="flex flex-row justify-between bg-[#232528] pt-4">
                   <Button
                     title="Close"
                     onPress={() => {
@@ -740,6 +741,7 @@ export function TaskScreen({ navigation }) {
                   )}
                 </View>
               </View>
+
             </View>
           </Modal>
         </View>
